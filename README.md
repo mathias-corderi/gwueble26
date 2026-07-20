@@ -16,6 +16,8 @@ Everything is placeholder art (colored shapes) — this build exists to test the
 | E | Sit on a nearby chair / stand up (breaks the chair!) |
 | R | Restart the run |
 
+> **Contributing music, art, chairs or enemies?** See [CONTRIBUTING.md](CONTRIBUTING.md) — everything is drop-in, no code required.
+
 ## How to add a new chair
 
 1. Duplicate any `.tres` in `data/chairs/` (e.g. `plastic_chair.tres`).

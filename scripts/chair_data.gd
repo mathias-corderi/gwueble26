@@ -25,5 +25,9 @@ extends Resource
 
 @export_group("Presentation")
 @export var music: AudioStream
+## Optional sprite; falls back to a colored placeholder rectangle when unset.
+@export var sprite: Texture2D
+## Optional sprite for this chair's projectiles; falls back to a colored circle.
+@export var projectile_sprite: Texture2D
 ## Optional replacement for the default projectile attack; unused by the prototype.
 @export var custom_attack_scene: PackedScene

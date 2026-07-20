@@ -12,3 +12,7 @@ extends Resource
 @export var attack_interval: float = 0.8
 ## Run time in seconds before this enemy type starts spawning.
 @export var unlock_time: float = 0.0
+
+@export_group("Presentation")
+## Optional sprite; falls back to a colored placeholder circle when unset.
+@export var sprite: Texture2D

@@ -14,6 +14,7 @@ const PIERCE_COUNT := 2
 var damage := 10.0
 var radius := 6.0
 var color := Color.WHITE
+var sprite: Texture2D
 var homing := false
 var burn := false
 var explosive := false
@@ -27,6 +28,7 @@ func configure(data: ChairData, direction: Vector2, passives: Array[StringName])
 	damage = data.damage
 	radius = data.projectile_radius
 	color = data.projectile_color
+	sprite = data.projectile_sprite
 	velocity = direction * data.projectile_speed
 	homing = &"homing" in passives
 	burn = &"burn" in passives
@@ -52,9 +54,13 @@ func _physics_process(delta: float) -> void:
 			var angle := rotate_toward(velocity.angle(), desired, HOMING_TURN_RATE * delta)
 			velocity = Vector2.from_angle(angle) * velocity.length()
 	global_position += velocity * delta
+	rotation = velocity.angle()
 
 func _draw() -> void:
-	draw_circle(Vector2.ZERO, radius, color)
+	if sprite:
+		SpriteFit.draw(self, sprite, Vector2.ONE * radius * 2.5)
+	else:
+		draw_circle(Vector2.ZERO, radius, color)
 
 func _on_body_entered(body: Node) -> void:
 	if body is Enemy:

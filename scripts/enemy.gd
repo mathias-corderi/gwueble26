@@ -84,7 +84,11 @@ func _try_attack() -> void:
 		_attack_cooldown = data.attack_interval
 
 func _draw() -> void:
-	var body_color := data.color
-	if _burn_time > 0.0:
-		body_color = body_color.lerp(Color.ORANGE, 0.6)
-	draw_circle(Vector2.ZERO, data.radius, body_color)
+	if data.sprite:
+		var tint := Color(1.6, 1.15, 0.7) if _burn_time > 0.0 else Color.WHITE
+		SpriteFit.draw(self, data.sprite, Vector2.ONE * data.radius * 2.0, tint)
+	else:
+		var body_color := data.color
+		if _burn_time > 0.0:
+			body_color = body_color.lerp(Color.ORANGE, 0.6)
+		draw_circle(Vector2.ZERO, data.radius, body_color)

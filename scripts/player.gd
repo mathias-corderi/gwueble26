@@ -28,6 +28,9 @@ var _nearby_chair: Chair
 var _dead := false
 var _fire_cooldown := 0.0
 
+## Optional sprite; falls back to a colored placeholder square when unset.
+@export var sprite: Texture2D
+
 @onready var interact_area: Area2D = $InteractArea
 
 func _ready() -> void:
@@ -39,8 +42,11 @@ func _ready() -> void:
 	camera.limit_bottom = int(RunState.ARENA.end.y)
 
 func _draw() -> void:
-	draw_rect(Rect2(-13, -13, 26, 26), Color(0.4, 0.8, 1.0))
-	draw_rect(Rect2(-13, -13, 26, 26), Color(0.12, 0.28, 0.4), false, 2.0)
+	if sprite:
+		SpriteFit.draw(self, sprite, Vector2(30, 30))
+	else:
+		draw_rect(Rect2(-13, -13, 26, 26), Color(0.4, 0.8, 1.0))
+		draw_rect(Rect2(-13, -13, 26, 26), Color(0.12, 0.28, 0.4), false, 2.0)
 
 func _physics_process(delta: float) -> void:
 	if _dead:

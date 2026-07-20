@@ -86,11 +86,13 @@ func _knockback_enemies() -> void:
 		enemy.apply_knockback(direction * KNOCKBACK_FORCE, KNOCKBACK_STUN)
 
 func _draw() -> void:
-	var seat_color := data.color
-	if _burnout_timer > 0.0 and int(_burnout_timer * 8.0) % 2 == 0:
-		seat_color = seat_color.lerp(Color.WHITE, 0.6)
-	draw_rect(Rect2(-22, -22, 44, 44), seat_color)
-	draw_rect(Rect2(-22, -34, 44, 12), seat_color.darkened(0.35))
+	var flashing := _burnout_timer > 0.0 and int(_burnout_timer * 8.0) % 2 == 0
+	if data.sprite:
+		SpriteFit.draw(self, data.sprite, Vector2(48, 56), Color(1.6, 1.6, 1.6) if flashing else Color.WHITE)
+	else:
+		var seat_color := data.color.lerp(Color.WHITE, 0.6) if flashing else data.color
+		draw_rect(Rect2(-22, -22, 44, 44), seat_color)
+		draw_rect(Rect2(-22, -34, 44, 12), seat_color.darkened(0.35))
 	var hp_ratio := clampf(hp / data.max_hp, 0.0, 1.0)
 	draw_rect(Rect2(-22, 28, 44, 5), Color(0, 0, 0, 0.5))
 	draw_rect(Rect2(-22, 28, 44 * hp_ratio, 5), Color(0.9, 0.25, 0.25))
