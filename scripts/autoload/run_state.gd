@@ -9,6 +9,8 @@ signal passive_expired(passive_id: StringName)
 signal passives_changed
 signal kills_changed(kills: int)
 
+var player_name: String = "Mathias"
+
 const ARENA := Rect2(-1180, -680, 2360, 1360)
 
 ## Central passive registry: display name, burn duration (seconds), max level.

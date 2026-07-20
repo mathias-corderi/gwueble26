@@ -1,0 +1,11 @@
+using RunState
+
+~ start
+Merchant: [[Hi|Hello|Howdy]], {{RunState.player_name}}
+Merchant: Here are some choices.
+- I'm looking to buy something.
+	- ability
+	- consumable
+	- weapon
+- Goodbye. => END
+=> END
