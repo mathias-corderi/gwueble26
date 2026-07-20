@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Runner"
+color = Color(0.95, 0.6, 0.2, 1)
+radius = 10.0
+speed = 230.0
+max_hp = 10.0
+contact_damage = 4.0
+attack_interval = 0.7
+unlock_time = 60.0

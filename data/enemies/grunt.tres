@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="EnemyData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemy_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Grunt"
+color = Color(0.8, 0.35, 0.3, 1)
+radius = 14.0
+speed = 120.0
+max_hp = 20.0
+contact_damage = 6.0
+attack_interval = 0.8
+unlock_time = 0.0

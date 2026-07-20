@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="ChairData" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/chair_data.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://audio/throne.wav" id="2_music"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Throne"
+color = Color(0.95, 0.78, 0.2, 1)
+max_hp = 140.0
+meter_time = 18.0
+fire_rate = 1.2
+damage = 30.0
+projectile_count = 1
+spread_degrees = 0.0
+projectile_speed = 480.0
+projectile_radius = 10.0
+projectile_color = Color(1, 0.85, 0.3, 1)
+passive_id = &"explosive"
+music = ExtResource("2_music")
