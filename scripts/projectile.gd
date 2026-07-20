@@ -1,39 +1,40 @@
 class_name Projectile
 extends Area2D
-## A single shot fired while seated. Passive flags are baked in at spawn time,
-## so any chair attack automatically benefits from every active passive.
+## A single shot from a weapon. Passive levels are baked in at spawn time, so
+## any weapon automatically benefits from every burning passive.
 
 const LIFETIME := 2.5
 const HOMING_TURN_RATE := 5.0
-const BURN_DPS := 5.0
+const BURN_DPS_PER_LEVEL := 5.0
 const BURN_DURATION := 2.5
-const EXPLOSION_RADIUS := 90.0
+const EXPLOSION_BASE_RADIUS := 90.0
+const EXPLOSION_RADIUS_PER_LEVEL := 30.0
 const EXPLOSION_DAMAGE_FACTOR := 0.7
-const PIERCE_COUNT := 2
+const PIERCE_PER_LEVEL := 2
 
 var damage := 10.0
 var radius := 6.0
 var color := Color.WHITE
 var sprite: Texture2D
 var homing := false
-var burn := false
-var explosive := false
+var burn_level := 0
+var explosive_level := 0
 var pierce_left := 0
 var velocity := Vector2.ZERO
 
 var _age := 0.0
 
 ## Must be called before the projectile is added to the tree.
-func configure(data: ChairData, direction: Vector2, passives: Array[StringName]) -> void:
-	damage = data.damage
-	radius = data.projectile_radius
-	color = data.projectile_color
-	sprite = data.projectile_sprite
-	velocity = direction * data.projectile_speed
-	homing = &"homing" in passives
-	burn = &"burn" in passives
-	explosive = &"explosive" in passives
-	pierce_left = PIERCE_COUNT if &"pierce" in passives else 0
+func configure(weapon: WeaponData, direction: Vector2, passive_levels: Dictionary) -> void:
+	damage = weapon.damage
+	radius = weapon.projectile_radius
+	color = weapon.projectile_color
+	sprite = weapon.projectile_sprite
+	velocity = direction * weapon.projectile_speed
+	homing = int(passive_levels.get(&"homing", 0)) > 0
+	burn_level = int(passive_levels.get(&"burn", 0))
+	explosive_level = int(passive_levels.get(&"explosive", 0))
+	pierce_left = PIERCE_PER_LEVEL * int(passive_levels.get(&"pierce", 0))
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
@@ -70,9 +71,9 @@ func _on_body_entered(body: Node) -> void:
 
 func _hit_enemy(enemy: Enemy) -> void:
 	enemy.take_damage(damage)
-	if burn:
-		enemy.apply_burn(BURN_DPS, BURN_DURATION)
-	if explosive:
+	if burn_level > 0:
+		enemy.apply_burn(BURN_DPS_PER_LEVEL * burn_level, BURN_DURATION)
+	if explosive_level > 0:
 		_explode(enemy)
 	if pierce_left > 0:
 		pierce_left -= 1
@@ -80,14 +81,15 @@ func _hit_enemy(enemy: Enemy) -> void:
 		queue_free()
 
 func _explode(direct_target: Enemy) -> void:
+	var explosion_radius := EXPLOSION_BASE_RADIUS + EXPLOSION_RADIUS_PER_LEVEL * (explosive_level - 1)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if enemy == direct_target:
 			continue
-		if global_position.distance_to(enemy.global_position) <= EXPLOSION_RADIUS:
+		if global_position.distance_to(enemy.global_position) <= explosion_radius:
 			enemy.take_damage(damage * EXPLOSION_DAMAGE_FACTOR)
-			if burn:
-				enemy.apply_burn(BURN_DPS, BURN_DURATION)
-	PulseVfx.spawn(get_tree().current_scene, global_position, EXPLOSION_RADIUS, Color(1.0, 0.6, 0.2), 0.25)
+			if burn_level > 0:
+				enemy.apply_burn(BURN_DPS_PER_LEVEL * burn_level, BURN_DURATION)
+	PulseVfx.spawn(get_tree().current_scene, global_position, explosion_radius, Color(1.0, 0.6, 0.2), 0.25)
 
 func _nearest_enemy() -> Node2D:
 	var best: Node2D = null

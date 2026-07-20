@@ -29,10 +29,10 @@ There is no global/standing music yet — if you compose one, ping the team and 
 
 Sprites are optional everywhere: if a sprite field is empty, the game draws the colored placeholder shape instead. So you can deliver art incrementally, one PNG at a time.
 
-- **Chairs**: drop your PNG in `art/`, open the chair's `.tres` in `data/chairs/`, and assign it to the **Sprite** field (and optionally **Projectile Sprite** for its shots). The sprite is auto-scaled to the chair's footprint (~48×56 px on screen), so any resolution works — roughly square-ish with the backrest at the top reads best.
+- **Chairs**: drop your PNG in `art/`, open the chair's `.tres` in `data/chairs/`, and assign it to the **Sprite** field. The sprite is auto-scaled to the chair's footprint (~48×56 px on screen), so any resolution works — roughly square-ish with the backrest at the top reads best.
 - **Enemies**: same, on the `.tres` files in `data/enemies/` (**Sprite** field). Auto-scaled to the enemy's `radius`.
-- **Player**: open `scenes/player.tscn`, select the root node, assign **Sprite** in the inspector (~30×30 px on screen).
-- Projectiles auto-rotate to face their direction of travel — author them pointing **right**.
+- **Weapons**: `.tres` files in `data/weapons/` — **Sprite** (map pickup) and **Projectile Sprite** (authored pointing **right**; projectiles auto-rotate).
+- **8-direction animated art** (player body, held weapons, chairs) has its own full spec — see [docs/ANIMATION_GUIDE.md](docs/ANIMATION_GUIDE.md). The single-PNG fields above are quick placeholders; the animation system supersedes them when frames are assigned.
 
 Keep in mind enemies flash white when hit and orange while burning, and chairs blink during burnout — very dark or pure-white sprites make those cues hard to read.
 
@@ -45,12 +45,19 @@ Keep in mind enemies flash white when hit and orange while burning, and chairs b
 |---|---|
 | `display_name` / `color` | Label over the chair; the color tints the placeholder, HUD theme and crosshair |
 | `max_hp` | How much enemy punishment the chair takes before breaking |
-| `meter_time` | Seconds seated until its passive becomes **permanent** (then the chair burns out) |
-| `fire_rate`, `damage`, `projectile_count`, `spread_degrees`, `projectile_speed/radius/color` | The attack. With 1 projectile, spread = random jitter; with several, spread = fan width |
-| `passive_id` | One of `triple_shot`, `homing`, `burn`, `explosive`, `pierce` — active while seated, permanent once the meter fills |
-| `music`, `sprite`, `projectile_sprite` | Presentation (all optional) |
+| `meter_time` | Seconds seated until its passive is granted/refreshed (then the chair burns out) |
+| `move_speed` | 0 = static chair; > 0 = it's a **mount** you drive with WASD while seated, at this speed |
+| `passive_id` | One of the ids in `RunState.PASSIVES` (`triple_shot`, `homing`, `burn`, `explosive`, `pierce`) |
+| `secondary_id` + `secondary_cooldown` / `secondary_uses` / `secondary_power` | Optional right-click ability while seated. Empty id = none. Implemented: `shockwave`. `secondary_uses = -1` means unlimited (cooldown only) |
+| `music`, `sprite`, `chair_frames` | Presentation (all optional; `chair_frames` is the 8-direction set, see the animation guide) |
 
-Balance intuition: strong attack or passive → compensate with low `max_hp` or long `meter_time`. Passives stack across a run, so late-game synergy is the fun part — think about how your chair feels once the player already owns other passives.
+**How passives work now (burning bars)**: filling a chair's meter grants its passive with a decaying timer — when the bar burns out, the passive is lost. Filling another chair of the same type resets the timer and levels the passive up (up to its `max_level` in `RunState.PASSIVES`; e.g. Triple Shot stacks to Lv3, Homing doesn't level). Balance intuition: strong passive or secondary → compensate with low `max_hp`, long `meter_time`, or being static.
+
+Note chairs no longer have a primary attack — that's the weapon's job now.
+
+## Creating a WEAPON 🔫
+
+Duplicate a `.tres` in `data/weapons/` and edit in the inspector: `display_name`, `color`, `handedness` (one/two-handed — only affects animation variants), `max_ammo` (the weapon is discarded at 0; 1 ammo per shot), and the attack params (`fire_rate`, `damage`, `projectile_count`, `spread_degrees`, `projectile_speed/radius/color`). Weapons spawn on the map, are picked up on contact (max 3 carried), and are switched with the mouse wheel. Auto-loaded from the folder, no code needed.
 
 ## Creating an ENEMY 👾
 
@@ -58,9 +65,9 @@ Duplicate a `.tres` in `data/enemies/` and edit: `color`, `radius` (visual + hit
 
 ## Code contributions
 
-- **New passive**: add its id + display name to `PASSIVE_NAMES` in `scripts/autoload/run_state.gd`, then implement its effect — projectile behaviors go in `scripts/projectile.gd` (see the `homing`/`burn`/`explosive`/`pierce` flags), shot-count/volley effects in `Player._fire()` (see `triple_shot`).
-- **Exotic chair attacks** (lasers, orbiting shields…): `ChairData.custom_attack_scene` is reserved for this but not wired up yet — talk to the team before building on it.
-- Balance constants live at the top of each script (`STANDING_DRAIN`, `KNOCKBACK_*`, spawner ramps, etc.).
+- **New passive**: add its entry (name, duration, max_level) to `PASSIVES` in `scripts/autoload/run_state.gd`, then implement its effect — projectile behaviors go in `scripts/projectile.gd` (see the `burn_level`/`explosive_level`/`pierce` handling), shot-count effects in `Player._fire()` (see `triple_shot`).
+- **New chair secondary**: add a case to the `match data.secondary_id` in `Chair.try_secondary()` (`scripts/chair.gd`); `Combat` (`scripts/combat.gd`) has shared helpers like `knockback_enemies`.
+- Balance constants live at the top of each script (`STANDING_DRAIN`, `KNOCKBACK_*`, `SHOCKWAVE_*`, spawner ramps, etc.).
 
 ## Before opening a PR
 

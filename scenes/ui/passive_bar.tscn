@@ -1,0 +1,30 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/passive_bar.gd" id="1"]
+
+[node name="PassiveBar" type="Control"]
+custom_minimum_size = Vector2(210, 34)
+script = ExtResource("1")
+
+[node name="NameLabel" type="Label" parent="."]
+offset_right = 210.0
+offset_bottom = 14.0
+theme_override_font_sizes/font_size = 11
+text = "Passive"
+
+[node name="Bar" type="ProgressBar" parent="."]
+offset_top = 20.0
+offset_right = 190.0
+offset_bottom = 28.0
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="FlameAnchor" type="Control" parent="."]
+
+[node name="FlamePlaceholder" type="ColorRect" parent="FlameAnchor"]
+offset_left = -3.0
+offset_top = -7.0
+offset_right = 3.0
+offset_bottom = 1.0
+color = Color(1, 0.6, 0.1, 1)

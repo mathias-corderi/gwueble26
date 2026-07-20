@@ -1,7 +1,8 @@
-[gd_resource type="Resource" script_class="ChairData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="ChairData" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/chair_data.gd" id="1_script"]
 [ext_resource type="AudioStream" path="res://audio/throne.wav" id="2_music"]
+[ext_resource type="Texture2D" uid="uid://c77knsshm7npq" path="res://art/chair.png" id="3_sprite"]
 
 [resource]
 script = ExtResource("1_script")
@@ -9,12 +10,11 @@ display_name = "Throne"
 color = Color(0.95, 0.78, 0.2, 1)
 max_hp = 140.0
 meter_time = 18.0
-fire_rate = 1.2
-damage = 30.0
-projectile_count = 1
-spread_degrees = 0.0
-projectile_speed = 480.0
-projectile_radius = 10.0
-projectile_color = Color(1, 0.85, 0.3, 1)
+move_speed = 0.0
 passive_id = &"explosive"
+secondary_id = &"shockwave"
+secondary_cooldown = 6.0
+secondary_uses = -1
+secondary_power = 1.5
 music = ExtResource("2_music")
+sprite = ExtResource("3_sprite")
