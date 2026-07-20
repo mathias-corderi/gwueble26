@@ -26,10 +26,8 @@ max_value = 100.0
 value = 100.0
 show_percentage = false
 
-[node name="PassivesLabel" type="Label" parent="Root/TopLeftPanel/VBox"]
+[node name="PassivesBox" type="VBoxContainer" parent="Root/TopLeftPanel/VBox"]
 unique_name_in_owner = true
-theme_override_font_sizes/font_size = 13
-text = "Passives: none"
 
 [node name="TopRightPanel" type="PanelContainer" parent="Root"]
 unique_name_in_owner = true
@@ -54,6 +52,27 @@ theme_override_font_sizes/font_size = 13
 text = "Kills: 0"
 horizontal_alignment = 1
 
+[node name="WeaponPanel" type="PanelContainer" parent="Root"]
+unique_name_in_owner = true
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -110.0
+offset_bottom = -16.0
+grow_vertical = 0
+
+[node name="VBox" type="VBoxContainer" parent="Root/WeaponPanel"]
+
+[node name="WeaponLabel" type="Label" parent="Root/WeaponPanel/VBox"]
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 16
+text = "Unarmed"
+
+[node name="CarriedLabel" type="Label" parent="Root/WeaponPanel/VBox"]
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 12
+text = "Find a weapon!"
+
 [node name="HintLabel" type="Label" parent="Root"]
 unique_name_in_owner = true
 anchor_left = 0.5
@@ -61,9 +80,9 @@ anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
 offset_left = -250.0
-offset_top = -170.0
+offset_top = -190.0
 offset_right = 250.0
-offset_bottom = -146.0
+offset_bottom = -166.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_font_sizes/font_size = 16
@@ -76,9 +95,9 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -160.0
-offset_top = -130.0
-offset_right = 160.0
+offset_left = -170.0
+offset_top = -150.0
+offset_right = 170.0
 offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 0
@@ -104,6 +123,12 @@ custom_minimum_size = Vector2(280, 16)
 max_value = 100.0
 value = 0.0
 show_percentage = false
+
+[node name="SecondaryLabel" type="Label" parent="Root/ChairPanel/VBox"]
+unique_name_in_owner = true
+theme_override_font_sizes/font_size = 12
+text = "RMB: Shockwave  •  ready"
+horizontal_alignment = 1
 
 [node name="ToastLabel" type="Label" parent="Root"]
 unique_name_in_owner = true
