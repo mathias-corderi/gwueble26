@@ -4,6 +4,8 @@ extends Node
 signal passive_gained(passive_id: StringName)
 signal kills_changed(kills: int)
 
+var player_name: String = "Mathias"
+
 const ARENA := Rect2(-1180, -680, 2360, 1360)
 
 const PASSIVE_NAMES := {

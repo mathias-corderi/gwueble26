@@ -1,0 +1,16 @@
+[remap]
+
+importer="dialogue_manager"
+importer_version=15
+type="Resource"
+uid="uid://d1yd1bv8vtoh7"
+path="res://.godot/imported/shop_greet.dialogue-aaceea63c82ef173f9a9960e892dc871.tres"
+
+[deps]
+
+source_file="res://data/dialogue/shop_greet.dialogue"
+dest_files=["res://.godot/imported/shop_greet.dialogue-aaceea63c82ef173f9a9960e892dc871.tres"]
+
+[params]
+
+defaults=true
