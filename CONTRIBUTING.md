@@ -47,17 +47,22 @@ Keep in mind enemies flash white when hit and orange while burning, and chairs b
 | `max_hp` | How much enemy punishment the chair takes before breaking |
 | `meter_time` | Seconds seated until its passive is granted/refreshed (then the chair burns out) |
 | `move_speed` | 0 = static chair; > 0 = it's a **mount** you drive with WASD while seated, at this speed |
-| `passive_id` | One of the ids in `RunState.PASSIVES` (`triple_shot`, `homing`, `burn`, `explosive`, `pierce`) |
+| `passive_id` | One of the ids in `RunState.PASSIVES` (`triple_shot`, `homing`, `burn`, `explosive`, `pierce`, `arc`) |
 | `secondary_id` + `secondary_cooldown` / `secondary_uses` / `secondary_power` | Optional right-click ability while seated. Empty id = none. Implemented: `shockwave`. `secondary_uses = -1` means unlimited (cooldown only) |
+| `break_effect_id` + `break_effect_power` | Optional blast fired whenever the chair breaks — from enemy damage, burnout, *or* standing up voluntarily, so popping your own chair is a tactic. Empty id = none. Implemented: `electric_burst` (wide-area electric damage). `break_effect_power` scales its radius and damage |
 | `music`, `sprite`, `chair_frames` | Presentation (all optional; `chair_frames` is the 8-direction set, see the animation guide) |
 
 **How passives work now (burning bars)**: filling a chair's meter grants its passive with a decaying timer — when the bar burns out, the passive is lost. Filling another chair of the same type resets the timer and levels the passive up (up to its `max_level` in `RunState.PASSIVES`; e.g. Triple Shot stacks to Lv3, Homing doesn't level). Sitting on a chair whose passive you already own keeps that passive's bar **pinned at full** while you stay seated — it only starts burning down again when you stand up. Balance intuition: strong passive or secondary → compensate with low `max_hp`, long `meter_time`, or being static.
 
-Note chairs no longer have a primary attack — that's the weapon's job now.
+Note chairs no longer have a primary attack — that's the weapon's job now. Unoccupied chairs are recycled after 2 minutes, but only while off-camera, so one never vanishes in front of the player.
+
+**The `arc` passive (Electric Arc)**: every bullet that hits an enemy fires a chain of lightning to the nearest enemies within a large radius, and each passive level adds one more jump. The laser triggers it too, with the cooldown tracked **per hit enemy** — a beam crossing three enemies throws three independent arcs.
 
 ## Creating a WEAPON 🔫
 
 Duplicate a `.tres` in `data/weapons/` and edit in the inspector. Weapons spawn on the map, are picked up on contact (max 3 carried), and are switched with the mouse wheel. Auto-loaded from the folder, no code needed.
+
+There is no inventory cap — the player carries as many weapons as they find. Walking over a weapon **already carried** restocks its ammo instead of duplicating it, up to **2× its `max_ammo`**; at that cap the pickup is left on the map for later.
 
 Common fields: `display_name`, `color`, `handedness` (one/two-handed — only affects animation variants), `max_ammo` (the weapon is discarded at 0). `attack_type` decides how the attack fields are read:
 
@@ -65,6 +70,8 @@ Common fields: `display_name`, `color`, `handedness` (one/two-handed — only af
 - **`BEAM`** (continuous laser, channeled while holding fire — Laser Gun): the same fields are reinterpreted. `fire_rate` = damage ticks per second, `damage` = damage per tick, **1 ammo per tick** (so `max_ammo / fire_rate` = seconds of total beam time), `projectile_count` + `spread_degrees` = fan of simultaneous beams, `projectile_radius` = beam half-width, `projectile_color` = beam tint. The ray visually extends past the screen edge (only enemies on camera are hit), is stopped by walls, and innately pierces everything it crosses. Passives adapt automatically: Triple Shot adds beams, Homing curves the beam smoothly through nearby enemies (it always leaves along the aim, then continues straight after the last target), Burn ignites everything touched, Explosive pops periodic mini-explosions on the enemies being hit, and Pierce widens the beam.
 
 **Beam art**: on a BEAM weapon, `projectile_sprite` is a **horizontally-tileable grayscale strip** (see `art/fx/laser_beam.png`, 16×16): its width tiles along the ray, its height stretches to the beam thickness, and the game tints it with `projectile_color`. Replace the PNG and the art updates itself; leave the field empty for a flat colored line placeholder.
+
+**Lightning art (Electric Arc)**: the arcs are generated procedurally — the game builds a zig-zagging path and re-rolls it several times per second, so the chaotic motion is already there and **no sprite is required**. To upgrade the look, drop a file at exactly `res://art/fx/lightning_bolt.png` and every arc picks it up automatically, with no field to assign. Author it like the laser strip (horizontally tileable, grayscale — the game tints it), but with a **spikier, noisier profile**: hard bright core, ragged edges, a few stray pixels off to the sides. A short tile (~8–16 px wide) reads best, since it repeats many times along a jittering path.
 
 ## Creating an ENEMY 👾
 

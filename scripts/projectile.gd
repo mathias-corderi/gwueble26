@@ -10,6 +10,9 @@ const EXPLOSION_BASE_RADIUS := 90.0
 const EXPLOSION_RADIUS_PER_LEVEL := 30.0
 const EXPLOSION_DAMAGE_FACTOR := 0.7
 const PIERCE_PER_LEVEL := 2
+## Share of the bullet's damage carried by the electric arc it triggers.
+const ARC_DAMAGE_FACTOR := 0.6
+const ARC_COLOR := Color(0.6, 0.85, 1.0)
 
 var damage := 10.0
 var radius := 6.0
@@ -18,6 +21,7 @@ var sprite: Texture2D
 var homing := false
 var burn_level := 0
 var explosive_level := 0
+var arc_level := 0
 var pierce_left := 0
 var velocity := Vector2.ZERO
 var lifetime := 2.5
@@ -35,6 +39,7 @@ func configure(weapon: WeaponData, direction: Vector2, passive_levels: Dictionar
 	homing = int(passive_levels.get(&"homing", 0)) > 0
 	burn_level = int(passive_levels.get(&"burn", 0))
 	explosive_level = int(passive_levels.get(&"explosive", 0))
+	arc_level = int(passive_levels.get(&"arc", 0))
 	pierce_left = PIERCE_PER_LEVEL * int(passive_levels.get(&"pierce", 0))
 
 func _ready() -> void:
@@ -76,6 +81,8 @@ func _hit_enemy(enemy: Enemy) -> void:
 		enemy.apply_burn(BURN_DPS_PER_LEVEL * burn_level, BURN_DURATION)
 	if explosive_level > 0:
 		_explode(enemy)
+	if arc_level > 0:
+		_arc_from(enemy)
 	if pierce_left > 0:
 		pierce_left -= 1
 	else:
@@ -91,6 +98,13 @@ func _explode(direct_target: Enemy) -> void:
 			if burn_level > 0:
 				enemy.apply_burn(BURN_DPS_PER_LEVEL * burn_level, BURN_DURATION)
 	PulseVfx.spawn(get_tree().current_scene, global_position, explosion_radius, Color(1.0, 0.6, 0.2), 0.25)
+
+## Electric Arc passive: the struck enemy zaps the chain around it. Each level
+## adds one more jump.
+func _arc_from(enemy: Enemy) -> void:
+	var chain := Combat.chain_lightning(get_tree(), enemy.global_position, arc_level,
+		damage * ARC_DAMAGE_FACTOR, [enemy])
+	LightningVfx.spawn(get_tree().current_scene, chain, ARC_COLOR)
 
 func _nearest_enemy() -> Node2D:
 	var best: Node2D = null

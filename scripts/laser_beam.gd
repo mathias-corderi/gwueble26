@@ -35,6 +35,10 @@ const EXPLOSION_INTERVAL := 0.8
 const EXPLOSION_BASE_RADIUS := 45.0
 const EXPLOSION_RADIUS_PER_LEVEL := 15.0
 const EXPLOSION_DAMAGE_FACTOR := 0.4
+## Electric Arc passive: the cooldown is tracked per hit enemy, not globally,
+## so a beam touching several enemies throws several independent arcs.
+const ARC_INTERVAL := 0.5
+const ARC_DAMAGE_FACTOR := 1.5
 
 var damage := 4.0
 var base_half_width := 5.0
@@ -43,9 +47,12 @@ var color := Color.WHITE
 var texture: Texture2D
 var burn_level := 0
 var explosive_level := 0
+var arc_level := 0
 
 var _points := PackedVector2Array()
 var _explosion_cooldown := 0.0
+## enemy -> seconds until it can throw another arc.
+var _arc_cooldowns := {}
 ## Smoothed exit direction; ZERO until the first update snaps it to the aim.
 var _aim_dir := Vector2.ZERO
 
@@ -72,11 +79,17 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_explosion_cooldown -= delta
+	for enemy in _arc_cooldowns.keys():
+		if not is_instance_valid(enemy):
+			_arc_cooldowns.erase(enemy)
+			continue
+		_arc_cooldowns[enemy] -= delta
 
 ## Rebuilds the polyline. Called every physics frame while channeling.
 func update_path(origin: Vector2, aim_dir: Vector2, passive_levels: Dictionary) -> void:
 	burn_level = int(passive_levels.get(&"burn", 0))
 	explosive_level = int(passive_levels.get(&"explosive", 0))
+	arc_level = int(passive_levels.get(&"arc", 0))
 	half_width = base_half_width * (1.0 + PIERCE_WIDTH_FACTOR * int(passive_levels.get(&"pierce", 0)))
 	_line.width = half_width * 2.0
 
@@ -90,7 +103,7 @@ func update_path(origin: Vector2, aim_dir: Vector2, passive_levels: Dictionary) 
 	var head := origin
 	var direction := _aim_dir
 	if int(passive_levels.get(&"homing", 0)) > 0:
-		var visible_rect := _visible_world_rect().grow(CAMERA_MARGIN)
+		var visible_rect := View.world_rect(self).grow(CAMERA_MARGIN)
 		var chained := {}
 		var target: Enemy = null
 		var max_turn := CURVE_STEP / CURVE_RADIUS
@@ -119,7 +132,7 @@ func update_path(origin: Vector2, aim_dir: Vector2, passive_levels: Dictionary) 
 
 ## Damages every enemy on the path once. Called by the player at fire_rate.
 func tick_damage() -> void:
-	var visible_rect := _visible_world_rect().grow(CAMERA_MARGIN)
+	var visible_rect := View.world_rect(self).grow(CAMERA_MARGIN)
 	var hits: Array[Enemy] = []
 	for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
 		if enemy.hp <= 0.0 or not visible_rect.has_point(enemy.global_position):
@@ -133,6 +146,11 @@ func tick_damage() -> void:
 		enemy.take_damage(damage)
 		if burn_level > 0:
 			enemy.apply_burn(Projectile.BURN_DPS_PER_LEVEL * burn_level, Projectile.BURN_DURATION)
+		if arc_level > 0 and float(_arc_cooldowns.get(enemy, 0.0)) <= 0.0:
+			_arc_cooldowns[enemy] = ARC_INTERVAL
+			var chain := Combat.chain_lightning(get_tree(), enemy.global_position, arc_level,
+				damage * ARC_DAMAGE_FACTOR, [enemy])
+			LightningVfx.spawn(get_tree().current_scene, chain, Projectile.ARC_COLOR)
 	if explode:
 		_explosion_cooldown = EXPLOSION_INTERVAL
 		_explode_at(hit_positions)
@@ -175,8 +193,3 @@ func _distance_to_path(point: Vector2) -> float:
 		var closest := Geometry2D.get_closest_point_to_segment(point, _points[i], _points[i + 1])
 		best = minf(best, point.distance_to(closest))
 	return best
-
-func _visible_world_rect() -> Rect2:
-	var canvas_xform := get_viewport().get_canvas_transform()
-	return Rect2(canvas_xform.affine_inverse().origin,
-		get_viewport_rect().size / canvas_xform.get_scale())

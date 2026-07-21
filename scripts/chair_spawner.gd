@@ -4,7 +4,7 @@ extends Node
 
 const CHAIR_SCENE := preload("res://scenes/chair.tscn")
 const CHAIRS_DIR := "res://data/chairs/"
-const TARGET_ACTIVE := 4
+const TARGET_ACTIVE := 6
 const MIN_DIST_TO_PLAYER := 260.0
 const MIN_DIST_TO_CHAIR := 320.0
 const ARENA_MARGIN := 120.0

@@ -17,6 +17,9 @@ var _gamer_chair: Chair
 var _mount_start_x := 0.0
 var _beam_enemy_a: Enemy
 var _beam_enemy_b: Enemy
+var _arc_near: Enemy
+var _arc_far: Enemy
+var _burst_enemy: Enemy
 
 func _ready() -> void:
 	var main: Node = load("res://scenes/main.tscn").instantiate()
@@ -106,7 +109,51 @@ func _physics_process(_delta: float) -> void:
 			Input.action_release("fire")
 		205:
 			_check(_player._active_beams.is_empty(), "beam clears when fire is released")
+			var shotgun: WeaponData = load("res://data/weapons/shotgun.tres")
+			_player.try_pickup(shotgun)
+			_player.try_pickup(load("res://data/weapons/pistol.tres"))
+			_check(_player.weapons.size() == 4, "a 4th distinct weapon fits (no inventory cap)")
+			var entry := _weapon_entry(shotgun)
+			entry.ammo = 1
+			_check(_player.try_pickup(shotgun), "duplicate pickup is accepted")
+			_check(_player.weapons.size() == 4 and _weapon_entry(shotgun).ammo > 1,
+				"duplicate pickup restocks ammo instead of adding a weapon")
+			_weapon_entry(shotgun).ammo = shotgun.max_ammo * Player.AMMO_STOCK_MULTIPLIER
+			_check(not _player.try_pickup(shotgun), "restock is capped at 2x base ammo")
+		210:
+			# Electric Arc: the bullet hits _arc_near, the chain must reach the
+			# enemy beside it but not one parked beyond Combat.ARC_RADIUS.
+			RunState.grant_passive(&"arc")
+			var arc_origin := _player.global_position + Vector2(0, -260)
+			_arc_near = _spawn_brute(arc_origin)
+			_spawn_brute(arc_origin + Vector2(90, 0))
+			_spawn_brute(arc_origin + Vector2(180, 0)) # reachable on the 2nd jump
+			_arc_far = _spawn_brute(arc_origin + Vector2(0, -(Combat.ARC_RADIUS + 400.0)))
+			var chain := Combat.chain_lightning(get_tree(), _arc_near.global_position,
+				RunState.passive_level(&"arc"), 20.0, [_arc_near])
+			_check(chain.size() == 2, "arc Lv1 chains to exactly one nearby enemy")
+			_check(_arc_far.hp == _arc_far.data.max_hp, "arc ignores enemies out of range")
+			RunState.grant_passive(&"arc")
+			var chain2 := Combat.chain_lightning(get_tree(), _arc_near.global_position,
+				RunState.passive_level(&"arc"), 20.0, [_arc_near])
+			_check(RunState.passive_level(&"arc") == 2 and chain2.size() == 3,
+				"leveling the arc adds one more jump")
+		215:
+			var burst_chair: Chair = CHAIR_SCENE.instantiate()
+			burst_chair.setup(load("res://data/chairs/electric_chair.tres"))
+			burst_chair.position = _player.global_position + Vector2(0, 300)
+			_chairs.add_child(burst_chair)
+			_burst_enemy = _spawn_brute(burst_chair.position + Vector2(120, 0))
+			burst_chair.break_chair()
+			_check(_burst_enemy.hp < _burst_enemy.data.max_hp,
+				"electric_burst damages enemies when the chair breaks")
 			_finish()
+
+func _weapon_entry(weapon_data: WeaponData) -> Dictionary:
+	for entry in _player.weapons:
+		if entry.data == weapon_data:
+			return entry
+	return {}
 
 func _spawn_brute(pos: Vector2) -> Enemy:
 	var enemy: Enemy = ENEMY_SCENE.instantiate()

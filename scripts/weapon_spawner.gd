@@ -4,11 +4,11 @@ extends Node
 
 const PICKUP_SCENE := preload("res://scenes/weapon_pickup.tscn")
 const WEAPONS_DIR := "res://data/weapons/"
-const TARGET_ACTIVE := 2
+const TARGET_ACTIVE := 3
 const MIN_DIST_TO_PLAYER := 200.0
 const MIN_DIST_TO_PICKUP := 400.0
 const ARENA_MARGIN := 120.0
-const RESPAWN_DELAY := 4.0
+const RESPAWN_DELAY := 3.0
 
 @export var container: Node2D
 

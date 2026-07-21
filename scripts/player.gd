@@ -21,7 +21,9 @@ const STANDING_DRAIN := 5.0
 const SEATED_REGEN := 3.0
 ## Minimum fan width when a passive turns a single shot into a volley.
 const MIN_FAN_SPREAD_DEG := 24.0
-const MAX_WEAPONS := 3
+## Picking up a weapon you already carry tops its ammo up to this multiple of
+## the weapon's base ammo.
+const AMMO_STOCK_MULTIPLIER := 2
 
 enum State { STANDING, SEATED }
 
@@ -120,11 +122,19 @@ func on_chair_broken() -> void:
 	stood_up.emit()
 	MusicManager.stop_music()
 
-## Called by weapon pickups; returns false when the inventory is full.
+## Called by weapon pickups. There is no inventory cap: a weapon already
+## carried just restocks its ammo. Returns false (leaving the pickup on the
+## map) only when that stock is already full.
 func try_pickup(weapon_data: WeaponData) -> bool:
-	if weapons.size() >= MAX_WEAPONS:
-		pickup_rejected.emit()
-		return false
+	for entry in weapons:
+		if entry.data == weapon_data:
+			var max_stock: int = weapon_data.max_ammo * AMMO_STOCK_MULTIPLIER
+			if entry.ammo >= max_stock:
+				pickup_rejected.emit()
+				return false
+			entry.ammo = mini(entry.ammo + weapon_data.max_ammo, max_stock)
+			weapons_changed.emit()
+			return true
 	weapons.append({data = weapon_data, ammo = weapon_data.max_ammo})
 	current_weapon_index = weapons.size() - 1
 	weapons_changed.emit()

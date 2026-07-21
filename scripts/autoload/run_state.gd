@@ -20,6 +20,7 @@ const PASSIVES := {
 	&"burn": {name = "Burn", duration = 42.0, max_level = 2},
 	&"explosive": {name = "Explosive", duration = 42.0, max_level = 2},
 	&"homing": {name = "Homing", duration = 30.0, max_level = 1},
+	&"arc": {name = "Electric Arc", duration = 36.0, max_level = 3},
 }
 
 var run_time := 0.0

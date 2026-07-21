@@ -20,6 +20,15 @@ const SHOCKWAVE_RADIUS := 240.0
 const SHOCKWAVE_FORCE := 600.0
 const SHOCKWAVE_STUN := 0.4
 const SHOCKWAVE_DAMAGE := 10.0
+const ELECTRIC_BURST_RADIUS := 360.0
+const ELECTRIC_BURST_DAMAGE := 35.0
+## Bolts fired outward from the chair when an electric_burst goes off.
+const ELECTRIC_BURST_BOLTS := 7
+const ELECTRIC_BURST_COLOR := Color(0.6, 0.85, 1.0)
+## Unoccupied chairs are recycled after this long, but only off-camera so one
+## never vanishes in front of the player.
+const IDLE_DESPAWN_TIME := 120.0
+const IDLE_DESPAWN_MARGIN := 120.0
 ## z_index values around the player's (6): behind normally, in front while the
 ## occupant aims up so the backrest covers the body.
 const Z_BEHIND_PLAYER := 2
@@ -36,6 +45,7 @@ var secondary_uses_left := -1
 var _meter_filled := false
 var _burnout_timer := -1.0
 var _breaking := false
+var _unused_time := 0.0
 
 @onready var name_label: Label = $NameLabel
 @onready var chair_sprite: AnimatedSprite2D = $ChairSprite
@@ -73,6 +83,11 @@ func _process(delta: float) -> void:
 	if occupied:
 		_update_facing()
 		queue_redraw()
+	else:
+		_unused_time += delta
+		if _unused_time >= IDLE_DESPAWN_TIME and _is_off_camera():
+			queue_free()
+			return
 	if secondary_cooldown_left > 0.0:
 		secondary_cooldown_left = maxf(secondary_cooldown_left - delta, 0.0)
 		if occupied:
@@ -87,6 +102,7 @@ func _process(delta: float) -> void:
 func occupy(player: Player) -> void:
 	occupied = true
 	occupant = player
+	_unused_time = 0.0
 	secondary_changed.emit(secondary_cooldown_left, secondary_uses_left)
 
 ## Right-click ability; called by the seated player.
@@ -124,8 +140,32 @@ func break_chair() -> void:
 	occupied = false
 	Combat.knockback_enemies(get_tree(), global_position, KNOCKBACK_RADIUS, KNOCKBACK_FORCE, KNOCKBACK_STUN)
 	PulseVfx.spawn(get_tree().current_scene, global_position, KNOCKBACK_RADIUS, data.color)
+	_apply_break_effect()
 	broke.emit()
 	queue_free()
+
+func _apply_break_effect() -> void:
+	match data.break_effect_id:
+		&"":
+			pass
+		&"electric_burst":
+			var radius := ELECTRIC_BURST_RADIUS * data.break_effect_power
+			for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
+				if global_position.distance_to(enemy.global_position) <= radius:
+					enemy.take_damage(ELECTRIC_BURST_DAMAGE * data.break_effect_power)
+			PulseVfx.spawn(get_tree().current_scene, global_position, radius,
+				ELECTRIC_BURST_COLOR, 0.4)
+			for i in ELECTRIC_BURST_BOLTS:
+				var angle := TAU * float(i) / ELECTRIC_BURST_BOLTS + randf_range(-0.2, 0.2)
+				var tip := global_position + Vector2.from_angle(angle) * radius
+				LightningVfx.spawn(get_tree().current_scene,
+					PackedVector2Array([global_position, tip]), ELECTRIC_BURST_COLOR)
+		_:
+			push_warning("Unknown break_effect_id: %s" % data.break_effect_id)
+
+func _is_off_camera() -> bool:
+	var view := View.world_rect(self).grow(IDLE_DESPAWN_MARGIN)
+	return view.size != Vector2.ZERO and not view.has_point(global_position)
 
 func _update_facing() -> void:
 	var aim := Vector2.DOWN

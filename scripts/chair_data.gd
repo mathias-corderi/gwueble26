@@ -27,6 +27,13 @@ extends Resource
 ## Generic magnitude multiplier (shockwave: knockback force and damage).
 @export var secondary_power: float = 1.0
 
+@export_group("Break Effect")
+## Fired whenever the chair breaks (enemy damage, burnout or standing up).
+## Empty = none. Implemented: "electric_burst".
+@export var break_effect_id: StringName = &""
+## Generic magnitude multiplier (electric_burst: radius and damage).
+@export var break_effect_power: float = 1.0
+
 @export_group("Presentation")
 @export var music: AudioStream
 ## Static sprite fallback used when chair_frames is not set (optional).

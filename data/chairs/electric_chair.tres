@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ChairData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/chair_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Electric Chair"
+color = Color(0.35, 0.75, 1, 1)
+max_hp = 75.0
+meter_time = 15.0
+move_speed = 0.0
+passive_id = &"arc"
+secondary_id = &""
+secondary_cooldown = 4.0
+secondary_uses = -1
+secondary_power = 1.0
+break_effect_id = &"electric_burst"
+break_effect_power = 1.0

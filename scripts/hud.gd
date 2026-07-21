@@ -5,6 +5,9 @@ extends CanvasLayer
 
 const NEUTRAL_THEME := Color(0.45, 0.48, 0.52)
 const PASSIVE_BAR_SCENE := preload("res://scenes/ui/passive_bar.tscn")
+## The inventory is uncapped, so the carried list is trimmed to keep the panel
+## from growing off-screen.
+const MAX_LISTED_WEAPONS := 6
 
 @onready var top_left_panel: PanelContainer = %TopLeftPanel
 @onready var top_right_panel: PanelContainer = %TopRightPanel
@@ -37,7 +40,7 @@ func _ready() -> void:
 	_player.near_chair_changed.connect(_on_near_chair_changed)
 	_player.died.connect(_on_player_died)
 	_player.weapons_changed.connect(_refresh_weapons)
-	_player.pickup_rejected.connect(func() -> void: _toast("WEAPONS FULL"))
+	_player.pickup_rejected.connect(func() -> void: _toast("AMMO FULL"))
 	RunState.passive_granted.connect(_on_passive_granted)
 	RunState.passive_expired.connect(_on_passive_expired)
 	RunState.passives_changed.connect(_sync_passive_bars)
@@ -114,11 +117,17 @@ func _refresh_weapons() -> void:
 		carried_label.text = "Find a weapon!"
 		return
 	weapon_label.text = "%s  %d / %d" % [weapon.data.display_name, weapon.ammo, weapon.data.max_ammo]
+	var total := _player.weapons.size()
+	# Scroll the list so the equipped weapon stays visible however many we carry.
+	var first := clampi(_player.current_weapon_index - MAX_LISTED_WEAPONS / 2,
+		0, maxi(total - MAX_LISTED_WEAPONS, 0))
 	var lines: Array[String] = []
-	for i in _player.weapons.size():
+	for i in range(first, mini(first + MAX_LISTED_WEAPONS, total)):
 		var entry: Dictionary = _player.weapons[i]
 		var marker := "> " if i == _player.current_weapon_index else "   "
 		lines.append("%s%s (%d)" % [marker, entry.data.display_name, entry.ammo])
+	if total > MAX_LISTED_WEAPONS:
+		lines.append("   +%d more" % (total - MAX_LISTED_WEAPONS))
 	carried_label.text = "\n".join(lines)
 
 func _sync_passive_bars() -> void:
