@@ -1,0 +1,147 @@
+[gd_scene format=3 uid="uid://d0whlywijwa6s"]
+
+[ext_resource type="Script" uid="uid://66ct0chhwb4h" path="res://addons/AsepriteWizard/config/config_dialog.gd" id="1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_01nxe"]
+bg_color = Color(0.09411765, 0.09411765, 0.08235294, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_brc5y"]
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 10.0
+content_margin_bottom = 5.0
+bg_color = Color(0.98039216, 0.7019608, 0.5294118, 0.2)
+border_width_left = 10
+border_color = Color(0.8, 0.8, 0.8, 0)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="DPITexture" id="DPITexture_brc5y"]
+_source = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\"><path fill=\"#ff5d5d\" d=\"M2 1v8.586l1.293-1.293a1 1 0 0 1 1.414 0L7 10.587l2.293-2.293a1 1 0 0 1 1.414 0L13 10.586l1-1V6H9V1H2zm8 0v4h4zm-6 9.414-2 2V15h12v-2.586l-.293.293a1 1 0 0 1-1.414 0L10 10.414l-2.293 2.293a1 1 0 0 1-1.414 0L4 10.414z\"/></svg>
+"
+
+[node name="config_dialog" type="Window" unique_id=538058913]
+oversampling_override = 1.0
+title = "Aseprite Wizard Config"
+initial_position = 1
+size = Vector2i(850, 383)
+wrap_controls = true
+transient = true
+min_size = Vector2i(800, 0)
+script = ExtResource("1")
+
+[node name="PanelContainer" type="PanelContainer" parent="." unique_id=423360226]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_01nxe")
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer" unique_id=478471235]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer" unique_id=1716459044]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="warnings" type="PanelContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1323900042]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_brc5y")
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer/VBoxContainer/warnings" unique_id=427020141]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/warnings/MarginContainer" unique_id=1554004521]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/warnings/MarginContainer/VBoxContainer" unique_id=37267498]
+layout_mode = 2
+
+[node name="Icon" type="TextureRect" parent="PanelContainer/MarginContainer/VBoxContainer/warnings/MarginContainer/VBoxContainer/HBoxContainer" unique_id=2087609229]
+modulate = Color(1, 1, 1, 0.486275)
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+texture = SubResource("DPITexture_brc5y")
+stretch_mode = 5
+
+[node name="v" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/warnings/MarginContainer/VBoxContainer/HBoxContainer" unique_id=1052645886]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="project_text" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/warnings/MarginContainer/VBoxContainer/HBoxContainer/v" unique_id=189370570]
+custom_minimum_size = Vector2(10, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "- Project specific settings are located at \"Project > Project Settings > Aseprite\""
+autowrap_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1430278514]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=956920373]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Aseprite Command" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer" unique_id=1734081041]
+layout_mode = 2
+tooltip_text = "Define the path for Aseprite command"
+mouse_filter = 1
+text = "Aseprite Command Path"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer" unique_id=1724038430]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="aseprite_command" type="LineEdit" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer" unique_id=498360008]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "/home/akintek/.local/share/applications/aseprite"
+caret_blink = true
+
+[node name="select" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer" unique_id=1012466700]
+layout_mode = 2
+text = "Find"
+
+[node name="test" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer" unique_id=1839938453]
+layout_mode = 2
+text = "Test"
+
+[node name="version_found" type="Label" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer" unique_id=1777806188]
+modulate = Color(1, 1, 1, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Aseprite version found"
+
+[node name="HSeparator2" type="HSeparator" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=578514576]
+layout_mode = 2
+
+[node name="VBoxContainer2" type="HBoxContainer" parent="PanelContainer/MarginContainer/VBoxContainer" unique_id=1188432807]
+layout_mode = 2
+alignment = 2
+
+[node name="close" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer2" unique_id=1210807111]
+layout_mode = 2
+text = "Close"
+
+[node name="save" type="Button" parent="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer2" unique_id=108612453]
+layout_mode = 2
+text = "Save"
+
+[connection signal="close_requested" from="." to="." method="_on_close_requested"]
+[connection signal="text_changed" from="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer/aseprite_command" to="." method="_on_aseprite_command_text_changed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer/select" to="." method="_on_select_pressed"]
+[connection signal="pressed" from="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer/HBoxContainer/test" to="." method="_on_test_pressed"]
+[connection signal="button_up" from="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer2/close" to="." method="_on_close_button_up"]
+[connection signal="button_up" from="PanelContainer/MarginContainer/VBoxContainer/VBoxContainer2/save" to="." method="_on_save_button_up"]
