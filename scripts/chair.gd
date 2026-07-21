@@ -72,7 +72,7 @@ func _physics_process(_delta: float) -> void:
 		velocity = Vector2.ZERO
 
 func _process(delta: float) -> void:
-	if occupied and not _meter_filled:
+	if occupied and not _meter_filled and data.meter_time > 0.0:
 		meter = minf(meter + delta, data.meter_time)
 		meter_changed.emit(meter, data.meter_time)
 		if meter >= data.meter_time:
@@ -85,7 +85,7 @@ func _process(delta: float) -> void:
 		queue_redraw()
 	else:
 		_unused_time += delta
-		if _unused_time >= IDLE_DESPAWN_TIME and _is_off_camera():
+		if can_idle_despawn() and _unused_time >= IDLE_DESPAWN_TIME and _is_off_camera():
 			queue_free()
 			return
 	if secondary_cooldown_left > 0.0:
@@ -141,8 +141,20 @@ func break_chair() -> void:
 	Combat.knockback_enemies(get_tree(), global_position, KNOCKBACK_RADIUS, KNOCKBACK_FORCE, KNOCKBACK_STUN)
 	PulseVfx.spawn(get_tree().current_scene, global_position, KNOCKBACK_RADIUS, data.color)
 	_apply_break_effect()
+	if _meter_filled:
+		_drop_mech_part() # only a chair that paid out its passive leaves a part
 	broke.emit()
 	queue_free()
+
+## Overridden by the Mech, which is permanent and must never be recycled.
+func can_idle_despawn() -> bool:
+	return true
+
+func _drop_mech_part() -> void:
+	var part: MechPart = preload("res://scenes/mech_part.tscn").instantiate()
+	part.setup(data)
+	part.position = global_position
+	get_parent().add_child(part)
 
 func _apply_break_effect() -> void:
 	match data.break_effect_id:

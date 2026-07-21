@@ -19,15 +19,15 @@ func _ready() -> void:
 	for file in ResourceLoader.list_directory(WEAPONS_DIR):
 		if file.ends_with(".tres"):
 			var resource := load(WEAPONS_DIR + file)
-			if resource is WeaponData:
+			if resource is WeaponData and resource.spawns_on_map:
 				_pool.append(resource)
 	if _pool.is_empty():
 		push_error("No WeaponData resources found in %s" % WEAPONS_DIR)
 	print("WeaponSpawner: loaded %d weapon types" % _pool.size())
 
 func _process(delta: float) -> void:
-	if _pool.is_empty():
-		return
+	if _pool.is_empty() or RunState.mech_active:
+		return # the Mech brings its own weapons
 	if container.get_child_count() >= TARGET_ACTIVE:
 		_spawn_timer = RESPAWN_DELAY
 		return

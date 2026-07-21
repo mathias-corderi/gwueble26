@@ -19,6 +19,9 @@ const MOVE_SPEED := 320.0
 ## HP lost per second while standing — the "slow burn" pressure to find a chair.
 const STANDING_DRAIN := 5.0
 const SEATED_REGEN := 3.0
+## Piloting the Mech only heals after this long without taking a hit; ordinary
+## chairs still regenerate immediately.
+const MECH_REGEN_DELAY := 4.0
 ## Minimum fan width when a passive turns a single shot into a volley.
 const MIN_FAN_SPREAD_DEG := 24.0
 ## Picking up a weapon you already carry tops its ammo up to this multiple of
@@ -35,6 +38,8 @@ var weapons: Array[Dictionary] = []
 var current_weapon_index := 0
 ## Seconds since the last shot; the animator uses it for the shoot state.
 var time_since_fire := 999.0
+## Seconds since the last hit taken; gates the Mech's regeneration.
+var time_since_damage := 999.0
 
 var _nearby_chair: Chair
 var _dead := false
@@ -44,6 +49,7 @@ var _active_beams: Array[LaserBeam] = []
 
 @onready var interact_area: Area2D = $InteractArea
 @onready var body_sprite: AnimatedSprite2D = $BodySprite
+@onready var collision_shape: CollisionShape2D = $CollisionShape2D
 
 func _ready() -> void:
 	add_to_group("player")
@@ -69,14 +75,16 @@ func _physics_process(delta: float) -> void:
 	if _dead:
 		return
 	time_since_fire += delta
+	time_since_damage += delta
 	_fire_cooldown -= delta
+	_tick_weapon_timers(delta)
 	if state == State.STANDING:
 		_standing_process(delta)
 	else:
 		_seated_process(delta)
 	if Input.is_action_pressed("fire") and not weapons.is_empty():
 		if current_weapon().data.attack_type == WeaponData.AttackType.BEAM:
-			_channel_beam()
+			_channel_beam(delta)
 		else:
 			_clear_beams()
 			if _fire_cooldown <= 0.0:
@@ -102,13 +110,15 @@ func _standing_process(delta: float) -> void:
 func _seated_process(delta: float) -> void:
 	if current_chair:
 		global_position = current_chair.global_position # ride the chair (mounts move)
-	_change_hp(SEATED_REGEN * delta)
+	if not (current_chair is Mech) or time_since_damage >= MECH_REGEN_DELAY:
+		_change_hp(SEATED_REGEN * delta)
 	if Input.is_action_just_pressed("secondary_fire") and current_chair:
 		current_chair.try_secondary()
 	if Input.is_action_just_pressed("interact") and current_chair:
 		current_chair.break_chair() # standing up voluntarily sacrifices the chair
 
 func take_damage(amount: float) -> void:
+	time_since_damage = 0.0
 	_change_hp(-amount)
 	modulate = Color(2.0, 1.2, 1.2)
 	var tween := create_tween()
@@ -118,9 +128,13 @@ func take_damage(amount: float) -> void:
 func on_chair_broken() -> void:
 	state = State.STANDING
 	current_chair = null
-	RunState.pinned_passive = &""
+	RunState.pinned_passives.clear()
 	stood_up.emit()
 	MusicManager.stop_music()
+
+## Turned off while piloting the Mech, whose body takes the hits instead.
+func set_hitbox_enabled(enabled: bool) -> void:
+	collision_shape.set_deferred("disabled", not enabled)
 
 ## Called by weapon pickups. There is no inventory cap: a weapon already
 ## carried just restocks its ammo. Returns false (leaving the pickup on the
@@ -135,10 +149,46 @@ func try_pickup(weapon_data: WeaponData) -> bool:
 			entry.ammo = mini(entry.ammo + weapon_data.max_ammo, max_stock)
 			weapons_changed.emit()
 			return true
-	weapons.append({data = weapon_data, ammo = weapon_data.max_ammo})
+	weapons.append(_make_entry(weapon_data))
 	current_weapon_index = weapons.size() - 1
 	weapons_changed.emit()
 	return true
+
+func _make_entry(weapon_data: WeaponData) -> Dictionary:
+	return {
+		data = weapon_data,
+		ammo = weapon_data.max_ammo,
+		reload_left = weapon_data.reload_interval,
+		energy = weapon_data.energy_seconds,
+		energy_locked = false,
+	}
+
+## Timed weapon upkeep: reload_interval refills ammo, and a drained energy
+## weapon recharges (only while locked — see WeaponData.energy_seconds).
+func _tick_weapon_timers(delta: float) -> void:
+	for entry in weapons:
+		if entry.data.reload_interval > 0.0 and entry.ammo < entry.data.max_ammo:
+			entry.reload_left -= delta
+			if entry.reload_left <= 0.0:
+				entry.reload_left = entry.data.reload_interval
+				entry.ammo = entry.data.max_ammo
+				weapons_changed.emit()
+		if entry.energy_locked:
+			var rate: float = entry.data.energy_seconds / maxf(entry.data.energy_recharge_time, 0.01)
+			entry.energy = minf(entry.energy + rate * delta, entry.data.energy_seconds)
+			if entry.energy >= entry.data.energy_seconds:
+				entry.energy_locked = false
+			weapons_changed.emit()
+
+## Called by the Mech when boarded: its built-in weapons replace whatever the
+## player was carrying (boarding is permanent, so nothing is stashed).
+func equip_loadout(loadout: Array[WeaponData]) -> void:
+	_clear_beams()
+	weapons.clear()
+	for weapon_data in loadout:
+		weapons.append(_make_entry(weapon_data))
+	current_weapon_index = 0
+	weapons_changed.emit()
 
 func current_weapon() -> Dictionary:
 	return {} if weapons.is_empty() else weapons[current_weapon_index]
@@ -153,7 +203,8 @@ func cycle_weapon(step: int) -> void:
 func _sit(chair: Chair) -> void:
 	state = State.SEATED
 	current_chair = chair
-	RunState.pinned_passive = chair.data.passive_id
+	if chair.data.passive_id != &"":
+		RunState.pinned_passives = [chair.data.passive_id]
 	chair.occupy(self)
 	global_position = chair.global_position
 	velocity = Vector2.ZERO
@@ -185,9 +236,20 @@ func _fire() -> void:
 
 ## Continuous BEAM weapons: keep one beam per fanned ray alive while fire is
 ## held, refresh aim/passives every frame, and damage + spend 1 ammo per tick.
-func _channel_beam() -> void:
+func _channel_beam(delta: float) -> void:
 	var weapon := current_weapon()
 	var weapon_data: WeaponData = weapon.data
+	if weapon_data.energy_seconds > 0.0:
+		if weapon.energy_locked:
+			_clear_beams() # drained: no beam until it has fully recharged
+			return
+		weapon.energy = maxf(weapon.energy - delta, 0.0)
+		if weapon.energy <= 0.0:
+			weapon.energy_locked = true
+			_clear_beams()
+			weapons_changed.emit()
+			return
+		weapons_changed.emit()
 	var chair_passive: StringName = current_chair.data.passive_id if current_chair else &""
 	var levels := RunState.effective_passive_levels(chair_passive)
 	var count: int = weapon_data.projectile_count + 2 * int(levels.get(&"triple_shot", 0))
@@ -225,6 +287,8 @@ func _clear_beams() -> void:
 	_active_beams.clear()
 
 func _spend_ammo(weapon: Dictionary) -> void:
+	if weapon.data.max_ammo < 0:
+		return # infinite ammo: nothing to spend, nothing to discard
 	weapon.ammo -= 1
 	if weapon.ammo <= 0:
 		weapons.remove_at(current_weapon_index)

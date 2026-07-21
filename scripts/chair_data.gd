@@ -7,6 +7,8 @@ extends Resource
 
 @export var display_name: String = "Chair"
 @export var color: Color = Color.WHITE
+## False keeps it out of the map spawner (e.g. the Mech, which is assembled).
+@export var spawns_on_map: bool = true
 @export var max_hp: float = 60.0
 ## Seconds the player must stay seated for the passive to be granted/refreshed.
 @export var meter_time: float = 12.0

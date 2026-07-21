@@ -13,7 +13,19 @@ enum AttackType { PROJECTILE, BEAM }
 ## Drives optional animation variants (see docs/ANIMATION_GUIDE.md); no gameplay effect.
 @export var handedness: Handedness = Handedness.ONE_HANDED
 ## The weapon is discarded when ammo reaches 0 (1 ammo per shot/volley).
+## -1 = infinite ammo (never spent, never discarded).
 @export var max_ammo: int = 60
+## Seconds until the weapon refills itself to full. 0 = never reloads.
+@export var reload_interval: float = 0.0
+## Seconds of continuous fire before the weapon runs dry. 0 = no energy limit.
+## Energy only ever refills once it has been drained to zero: keeping a reserve
+## lets you fire in bursts forever, but emptying it locks the weapon until it
+## has recharged all the way back to 100%.
+@export var energy_seconds: float = 0.0
+## Seconds to go from empty back to full while locked.
+@export var energy_recharge_time: float = 0.0
+## False keeps the weapon out of the map spawner (e.g. the Mech's built-ins).
+@export var spawns_on_map: bool = true
 
 @export_group("Attack")
 ## For BEAM weapons: fire_rate = damage ticks/s, damage = per tick, 1 ammo per

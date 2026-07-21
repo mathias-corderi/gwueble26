@@ -20,6 +20,8 @@ var _beam_enemy_b: Enemy
 var _arc_near: Enemy
 var _arc_far: Enemy
 var _burst_enemy: Enemy
+var _mech: Mech
+var _hp_before := 0.0
 
 func _ready() -> void:
 	var main: Node = load("res://scenes/main.tscn").instantiate()
@@ -147,7 +149,158 @@ func _physics_process(_delta: float) -> void:
 			burst_chair.break_chair()
 			_check(_burst_enemy.hp < _burst_enemy.data.max_hp,
 				"electric_burst damages enemies when the chair breaks")
+		220:
+			# Break both chairs far from the player so the drops aren't instantly
+			# collected, then compare part counts.
+			var unfilled := _spawn_chair_at(_player.global_position + Vector2(500, 0))
+			var parts_before := _count_parts()
+			unfilled.break_chair()
+			_check(_count_parts() == parts_before, "an unfilled chair drops nothing")
+			var filled := _spawn_chair_at(_player.global_position + Vector2(700, 0))
+			filled._meter_filled = true # stand in for having sat through the meter
+			filled.break_chair()
+			_check(_count_parts() == parts_before + 1,
+				"a meter-filled chair drops a mech part when it breaks")
+			# Carrying is capped; extra parts stay on the map.
+			var source: ChairData = load("res://data/chairs/gamer_chair.tres")
+			for i in RunState.MAX_CARRIED_PARTS + 2:
+				RunState.carry_part(source)
+			_check(RunState.carried_parts.size() == RunState.MAX_CARRIED_PARTS,
+				"carrying is capped at MAX_CARRIED_PARTS")
+			_check(RunState.deposit_parts() == RunState.MAX_CARRIED_PARTS,
+				"the station takes every carried part")
+			_check(RunState.carried_parts.is_empty(), "hands are empty after depositing")
+		225:
+			var station: MechStation = get_tree().get_first_node_in_group("mech_station")
+			_check(station.build_stage() == RunState.deposited_parts.size(),
+				"the station reports one build stage per delivered part")
+			_check(station._stage_texture(station.build_stage()) == null,
+				"missing build-stage art falls back to the placeholder")
+			# Fill the rest with burn chairs so the Mech gets a stacked passive.
+			var burn_chair: ChairData = load("res://data/chairs/gamer_chair.tres")
+			while RunState.deposited_parts.size() < RunState.MECH_PARTS_REQUIRED:
+				RunState.carry_part(burn_chair)
+				RunState.deposit_parts()
+			_check(RunState.deposited_parts.size() == RunState.MECH_PARTS_REQUIRED,
+				"the mech reaches its part requirement")
+			station._try_assemble()
+		230:
+			_mech = _find_mech()
+			_check(_mech != null, "the mech is assembled at the station")
+			_check(_mech.data.spawns_on_map == false, "the mech never spawns as a random chair")
+			_mech.break_chair()
+			_check(is_instance_valid(_mech), "the mech cannot be broken")
+			_check(not RunState.mech_active, "mech-gated content is asleep before boarding")
+			_spawn_chair_at(_player.global_position + Vector2(600, 0)) # must be swept away
+			_player.on_chair_broken() # leave the electric chair test state behind
+			_player._sit(_mech)
+			_check(_player.state == Player.State.SEATED, "player boards the mech")
+			_check(RunState.mech_active, "boarding flips the mech_active gate")
+			_check(RunState.passive_level(&"burn") >= 2,
+				"the mech stacks passives from repeated chair parts")
+			_check(&"burn" in RunState.pinned_passives, "mech passives are pinned")
+			RunState.passives[&"burn"].time_left = 0.05
+		235:
+			_check(RunState.passive_level(&"burn") >= 2, "mech passives never burn out")
+			_check(_chairs.get_children().all(func(n: Node) -> bool: return not (n is Chair)),
+				"boarding clears the remaining chairs")
+			_check(get_tree().get_nodes_in_group("weapon_pickups").is_empty(),
+				"boarding clears the weapon pickups")
+			_check(_player.collision_shape.disabled,
+				"the pilot's own hitbox yields to the mech body")
+			# Damage aimed at the mech must land on the pilot, not the robot.
+			_hp_before = _player.hp
+			_mech.take_damage(12.0)
+			_check(is_instance_valid(_mech) and _player.hp == _hp_before - 12.0,
+				"damage to the mech drains the pilot's HP")
+		240:
+			_check(_player.hp <= _hp_before - 12.0, "no regen within the mech's damage window")
+			_check(_player.time_since_damage < Player.MECH_REGEN_DELAY, "the regen window is open")
+			_player.time_since_damage = Player.MECH_REGEN_DELAY + 1.0
+			_hp_before = _player.hp
+		245:
+			_check(_player.hp > _hp_before, "regen resumes once the damage window passes")
+			var machinegun: WeaponData = _player.weapons[0].data
+			_check(machinegun.max_ammo < 0, "the mech equips an infinite-ammo weapon")
+			_player._spend_ammo(_player.weapons[0])
+			_check(_player.weapons.size() == 2 and _player.weapons[0].ammo < 0,
+				"infinite ammo is never spent nor discarded")
+			# Mech laser energy: drains while firing, locks empty, only then refills.
+			_player.current_weapon_index = 1
+			var laser: Dictionary = _player.weapons[1]
+			_check(laser.data.energy_seconds > 0.0, "the mech laser runs on energy")
+			laser.energy = 5.0
+			_player._tick_weapon_timers(1.0)
+			_check(laser.energy == 5.0, "a partly used reserve does not recharge on its own")
+			_player._channel_beam(1.0)
+			_check(laser.energy < 5.0, "channelling drains the energy reserve")
+			laser.energy = 0.2
+			_player._channel_beam(0.5)
+			_check(laser.energy_locked and _player._active_beams.is_empty(),
+				"draining the reserve locks the laser")
+		250:
+			var laser: Dictionary = _player.weapons[1]
+			_player._channel_beam(0.5)
+			_check(_player._active_beams.is_empty(), "a locked laser refuses to fire")
+			_player._tick_weapon_timers(1.0)
+			_check(laser.energy > 0.0, "a locked laser recharges")
+			laser.energy = laser.data.energy_seconds - 0.01
+			_player._tick_weapon_timers(1.0)
+			_check(not laser.energy_locked, "the laser unlocks at a full reserve")
+			var spawner_pool: Array = _weapon_spawner._pool
+			_check(not spawner_pool.any(func(w: WeaponData) -> bool: return not w.spawns_on_map),
+				"mech-only weapons stay out of the map spawner")
+		255:
+			# The Sentry: mech-gated, kites away when crowded, shoots past allies.
+			var sentry_data: EnemyData = load("res://data/enemies/sentry.tres")
+			_check(sentry_data.requires_mech, "the sentry is gated behind the mech")
+			_check(sentry_data.speed < _mech.data.move_speed,
+				"the mech can always run a sentry down")
+			var sentry: Enemy = ENEMY_SCENE.instantiate()
+			sentry.setup(sentry_data)
+			sentry.position = _player.global_position + Vector2(100, 0) # far too close
+			_enemies.add_child(sentry)
+			var away: Vector2 = sentry._desired_direction()
+			_check(away.dot(Vector2.RIGHT) > 0.0, "a crowded sentry backs away from the player")
+			sentry._shoot()
+			var shot := _find_enemy_shot()
+			_check(shot != null, "the sentry fires a projectile")
+			_check(shot.collision_mask & 2 == 0, "enemy shots pass through other enemies")
+			_hp_before = _player.hp
+			shot._on_body_entered(_mech)
+			_check(_player.hp < _hp_before, "an enemy shot on the mech hurts the pilot")
+		260:
+			# Guards the restart bug: reset() must announce the wipe so the HUD
+			# drops passive bars built from the previous run.
+			var announced := [false]
+			RunState.passives_changed.connect(func() -> void: announced[0] = true, CONNECT_ONE_SHOT)
+			RunState.reset()
+			_check(announced[0], "reset() announces the cleared state to the HUD")
+			_check(RunState.passives.is_empty() and not RunState.mech_active,
+				"reset() clears passives and the mech gate")
 			_finish()
+
+func _spawn_chair_at(pos: Vector2) -> Chair:
+	var chair: Chair = CHAIR_SCENE.instantiate()
+	chair.setup(load("res://data/chairs/plastic_chair.tres"))
+	chair.position = pos
+	_chairs.add_child(chair)
+	return chair
+
+func _count_parts() -> int:
+	return _chairs.get_children().filter(func(n: Node) -> bool: return n is MechPart).size()
+
+func _find_enemy_shot() -> EnemyProjectile:
+	for node in _projectiles.get_children():
+		if node is EnemyProjectile:
+			return node
+	return null
+
+func _find_mech() -> Mech:
+	for node in _chairs.get_parent().get_children():
+		if node is Mech:
+			return node
+	return null
 
 func _weapon_entry(weapon_data: WeaponData) -> Dictionary:
 	for entry in _player.weapons:

@@ -19,22 +19,30 @@ func _ready() -> void:
 	for file in ResourceLoader.list_directory(CHAIRS_DIR):
 		if file.ends_with(".tres"):
 			var resource := load(CHAIRS_DIR + file)
-			if resource is ChairData:
+			if resource is ChairData and resource.spawns_on_map:
 				_pool.append(resource)
 	if _pool.is_empty():
 		push_error("No ChairData resources found in %s" % CHAIRS_DIR)
 	print("ChairSpawner: loaded %d chair types" % _pool.size())
 
 func _process(delta: float) -> void:
-	if _pool.is_empty():
-		return
-	if container.get_child_count() >= TARGET_ACTIVE:
+	if _pool.is_empty() or RunState.mech_active:
+		return # the Mech replaces chairs entirely
+	# Dropped mech parts share this container, so count actual chairs only.
+	if _active_chairs() >= TARGET_ACTIVE:
 		_spawn_timer = RESPAWN_DELAY
 		return
 	_spawn_timer -= delta
 	if _spawn_timer <= 0.0:
 		_spawn_chair()
 		_spawn_timer = RESPAWN_DELAY
+
+func _active_chairs() -> int:
+	var count := 0
+	for child in container.get_children():
+		if child is Chair:
+			count += 1
+	return count
 
 func _spawn_chair() -> void:
 	var chair: Chair = CHAIR_SCENE.instantiate()
@@ -54,7 +62,7 @@ func _find_position() -> Vector2:
 			continue
 		var too_close := false
 		for chair in container.get_children():
-			if pos.distance_to(chair.position) < MIN_DIST_TO_CHAIR:
+			if chair is Chair and pos.distance_to(chair.position) < MIN_DIST_TO_CHAIR:
 				too_close = true
 				break
 		if not too_close:

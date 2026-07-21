@@ -36,7 +36,9 @@ func _process(delta: float) -> void:
 		return
 	var run_time := RunState.run_time
 	_timer = maxf(MIN_INTERVAL, START_INTERVAL - (START_INTERVAL - MIN_INTERVAL) * run_time / RAMP_TIME)
-	var unlocked := _pool.filter(func(data: EnemyData) -> bool: return data.unlock_time <= run_time)
+	# Mech-gated types join the normal draw once the Mech is running.
+	var unlocked := _pool.filter(func(data: EnemyData) -> bool:
+		return data.unlock_time <= run_time and (not data.requires_mech or RunState.mech_active))
 	if unlocked.is_empty():
 		return
 	var batch := 1 + int(run_time / BATCH_GROWTH_TIME)

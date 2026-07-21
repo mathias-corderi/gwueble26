@@ -62,6 +62,10 @@ Note chairs no longer have a primary attack — that's the weapon's job now. Uno
 
 Duplicate a `.tres` in `data/weapons/` and edit in the inspector. Weapons spawn on the map, are picked up on contact (max 3 carried), and are switched with the mouse wheel. Auto-loaded from the folder, no code needed.
 
+Special-case fields: `max_ammo = -1` means **infinite ammo** (never spent, never discarded), `reload_interval` refills the weapon to full every N seconds (0 = never), and `spawns_on_map = false` keeps it out of the world spawner — that's how the Mech's built-in weapons stay exclusive to the Mech.
+
+`energy_seconds` + `energy_recharge_time` add a **fuel gauge** for continuous (BEAM) weapons, shown as a % in the HUD. Firing drains it in real time; **it does not recharge while you hold a reserve**. Only when it hits 0% does the weapon lock and start refilling, and it stays locked until back at 100%. So you can fire measured bursts indefinitely, but emptying it costs you the full cooldown — see the Mech laser (10 s of fire, 30 s recharge).
+
 There is no inventory cap — the player carries as many weapons as they find. Walking over a weapon **already carried** restocks its ammo instead of duplicating it, up to **2× its `max_ammo`**; at that cap the pickup is left on the map for later.
 
 Common fields: `display_name`, `color`, `handedness` (one/two-handed — only affects animation variants), `max_ammo` (the weapon is discarded at 0). `attack_type` decides how the attack fields are read:
@@ -73,9 +77,37 @@ Common fields: `display_name`, `color`, `handedness` (one/two-handed — only af
 
 **Lightning art (Electric Arc)**: the arcs are generated procedurally — the game builds a zig-zagging path and re-rolls it several times per second, so the chaotic motion is already there and **no sprite is required**. To upgrade the look, drop a file at exactly `res://art/fx/lightning_bolt.png` and every arc picks it up automatically, with no field to assign. Author it like the laser strip (horizontally tileable, grayscale — the game tints it), but with a **spikier, noisier profile**: hard bright core, ragged edges, a few stray pixels off to the sides. A short tile (~8–16 px wide) reads best, since it repeats many times along a jittering path.
 
+## The MECH 🤖
+
+The run's long-term goal. Every chair that **fills its meter** and then breaks ejects a robotic **part** that stays on the map forever. The player carries up to **3 parts** at a time and delivers them to the station at the centre of the arena; at **10 delivered parts** the Mech is assembled and can be boarded with E.
+
+Boarding it **clears and closes the map**: every remaining chair, weapon pickup and loose part is removed, their spawners stop, and the mech-gated enemies (the Sentry) wake up. The robot itself is indestructible, but it is **not** a shield — everything that hits it is passed straight to the pilot's HP, and in the Mech you only start healing after 4 seconds without taking a hit.
+
+The Mech is permanent: it never breaks, has no meter, is driven with WASD, and you can't get off. It carries **the passive of every chair that contributed a part** — parts from the same chair type stack into higher levels, exactly like sitting on that chair again — and those passives **never burn out**. It brings its own weapons (an infinite-ammo chaingun and a laser that auto-reloads) plus a shockwave on right click.
+
+Balance knobs live in `RunState` (`MECH_PARTS_REQUIRED`, `MAX_CARRIED_PARTS`) and `data/chairs/mech.tres` (speed, secondary). The Mech is a normal `ChairData` with `spawns_on_map = false`, so it never appears as a random chair.
+
+### Mech ART 🎨
+
+The station shows **one build stage per delivered part**, from bare frame to finished robot. To add the art:
+
+1. Author **10 PNGs**, one per stage — the same robot growing piece by piece. Use a **consistent canvas size and pivot** across all 10 so the silhouette builds up in place instead of jumping around; the game scales each one to fit and grows the footprint as the stages advance.
+2. Drop them in `art/`, select the `MechStation` node in `scenes/main.tscn`, and assign them **in order** to the `Build Stage Sprites` array.
+3. Put the 10th (finished robot) into `data/chairs/mech.tres`'s `sprite` field, so the Mech the player boards matches the last build stage.
+
+Partial deliveries are fine — assign whatever stages exist and the station shows the highest one authored so far. Until any art lands, a placeholder silhouette gains a visible piece per stage (feet → legs → hips → torso → core → arms → head → optics → cannons).
+
 ## Creating an ENEMY 👾
 
 Duplicate a `.tres` in `data/enemies/` and edit: `color`, `radius` (visual + hitbox size), `speed`, `max_hp`, `contact_damage`, `attack_interval` (seconds between contact hits), and `unlock_time` (seconds into the run before it starts spawning). Auto-loaded the same way.
+
+Two optional behaviours turn a charger into something else — see `data/enemies/sentry.tres`, which uses both:
+
+| Field | What it does |
+|---|---|
+| `preferred_distance` | > 0 makes it a **kiter**: it backs away when the player is closer than this and closes in when further. Keep `speed` below the Mech's (220) so the player can always run it down |
+| `shot_interval` + `shot_speed` / `shot_radius` / `shot_damage` / `shot_sprite` | > 0 makes it **shoot**. The projectile flies straight, **passes through other enemies**, and dies on hitting the player or leaving the arena |
+| `requires_mech` | Holds the type back until the player boards the Mech; from then on it joins the normal spawn draw like any other unlocked enemy |
 
 ## Code contributions
 

@@ -11,6 +11,7 @@ var _burn_dps := 0.0
 var _stun_time := 0.0
 var _knockback := Vector2.ZERO
 var _attack_cooldown := 0.0
+var _shot_cooldown := 0.0
 var _player: Node2D
 
 @onready var hitbox: Area2D = $Hitbox
@@ -42,13 +43,40 @@ func _physics_process(delta: float) -> void:
 		velocity = _knockback
 		_knockback = _knockback.move_toward(Vector2.ZERO, 1400.0 * delta)
 	elif is_instance_valid(_player):
-		velocity = global_position.direction_to(_player.global_position) * data.speed
+		velocity = _desired_direction() * data.speed
 	else:
 		velocity = Vector2.ZERO
 	move_and_slide()
 	_attack_cooldown -= delta
 	if _attack_cooldown <= 0.0:
 		_try_attack()
+	if data.shot_interval > 0.0 and is_instance_valid(_player):
+		_shot_cooldown -= delta
+		if _shot_cooldown <= 0.0:
+			_shot_cooldown = data.shot_interval
+			_shoot()
+
+## Chargers head straight for the player; kiters hold preferred_distance.
+func _desired_direction() -> Vector2:
+	var to_player := global_position.direction_to(_player.global_position)
+	if data.preferred_distance <= 0.0:
+		return to_player
+	var distance := global_position.distance_to(_player.global_position)
+	# A dead band around the ideal range stops it from jittering in place.
+	if distance < data.preferred_distance * 0.9:
+		return -to_player
+	if distance > data.preferred_distance * 1.1:
+		return to_player
+	return Vector2.ZERO
+
+func _shoot() -> void:
+	var shot: EnemyProjectile = preload("res://scenes/enemy_projectile.tscn").instantiate()
+	shot.configure(data, global_position.direction_to(_player.global_position))
+	shot.global_position = global_position
+	var container := get_tree().get_first_node_in_group("projectile_container")
+	if container == null:
+		container = get_parent()
+	container.add_child(shot)
 
 func take_damage(amount: float, flash := true) -> void:
 	hp -= amount

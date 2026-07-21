@@ -15,6 +15,7 @@ const MAX_LISTED_WEAPONS := 6
 @onready var passives_box: VBoxContainer = %PassivesBox
 @onready var time_label: Label = %TimeLabel
 @onready var kills_label: Label = %KillsLabel
+@onready var mech_label: Label = %MechLabel
 @onready var hint_label: Label = %HintLabel
 @onready var weapon_panel: PanelContainer = %WeaponPanel
 @onready var weapon_label: Label = %WeaponLabel
@@ -40,11 +41,14 @@ func _ready() -> void:
 	_player.near_chair_changed.connect(_on_near_chair_changed)
 	_player.died.connect(_on_player_died)
 	_player.weapons_changed.connect(_refresh_weapons)
-	_player.pickup_rejected.connect(func() -> void: _toast("AMMO FULL"))
+	_player.pickup_rejected.connect(_on_pickup_rejected)
 	RunState.passive_granted.connect(_on_passive_granted)
 	RunState.passive_expired.connect(_on_passive_expired)
 	RunState.passives_changed.connect(_sync_passive_bars)
 	RunState.kills_changed.connect(_on_kills_changed)
+	RunState.parts_changed.connect(_refresh_mech)
+	RunState.mech_ready.connect(func() -> void: _toast("MECH READY — press E"))
+	_refresh_mech()
 	hp_bar.max_value = Player.MAX_HP
 	hp_bar.value = _player.hp
 	_style_bar(hp_bar, Color(0.85, 0.25, 0.25))
@@ -116,7 +120,14 @@ func _refresh_weapons() -> void:
 		weapon_label.text = "Unarmed"
 		carried_label.text = "Find a weapon!"
 		return
-	weapon_label.text = "%s  %d / %d" % [weapon.data.display_name, weapon.ammo, weapon.data.max_ammo]
+	if weapon.data.energy_seconds > 0.0:
+		var percent := roundi(100.0 * weapon.energy / weapon.data.energy_seconds)
+		var prefix := "RECHARGING " if weapon.energy_locked else ""
+		weapon_label.text = "%s  %s%d%%" % [weapon.data.display_name, prefix, percent]
+	elif weapon.data.max_ammo < 0:
+		weapon_label.text = "%s  ∞" % weapon.data.display_name
+	else:
+		weapon_label.text = "%s  %d / %d" % [weapon.data.display_name, weapon.ammo, weapon.data.max_ammo]
 	var total := _player.weapons.size()
 	# Scroll the list so the equipped weapon stays visible however many we carry.
 	var first := clampi(_player.current_weapon_index - MAX_LISTED_WEAPONS / 2,
@@ -125,7 +136,12 @@ func _refresh_weapons() -> void:
 	for i in range(first, mini(first + MAX_LISTED_WEAPONS, total)):
 		var entry: Dictionary = _player.weapons[i]
 		var marker := "> " if i == _player.current_weapon_index else "   "
-		lines.append("%s%s (%d)" % [marker, entry.data.display_name, entry.ammo])
+		var ammo := "∞" if entry.data.max_ammo < 0 else str(entry.ammo)
+		if entry.data.energy_seconds > 0.0:
+			ammo = "%d%%" % roundi(100.0 * entry.energy / entry.data.energy_seconds)
+		elif entry.data.reload_interval > 0.0 and entry.ammo < entry.data.max_ammo:
+			ammo += " reloading"
+		lines.append("%s%s (%s)" % [marker, entry.data.display_name, ammo])
 	if total > MAX_LISTED_WEAPONS:
 		lines.append("   +%d more" % (total - MAX_LISTED_WEAPONS))
 	carried_label.text = "\n".join(lines)
@@ -151,6 +167,20 @@ func _on_passive_expired(passive_id: StringName) -> void:
 
 func _on_kills_changed(kills: int) -> void:
 	kills_label.text = "Kills: %d" % kills
+
+## The pickup was refused: either both hands are full of mech parts, or the
+## weapon's ammo stock is already maxed.
+func _on_pickup_rejected() -> void:
+	if RunState.carried_parts.size() >= RunState.MAX_CARRIED_PARTS:
+		_toast("HANDS FULL")
+	else:
+		_toast("AMMO FULL")
+
+func _refresh_mech() -> void:
+	mech_label.text = "Parts %d/%d  •  Mech %d/%d" % [
+		RunState.carried_parts.size(), RunState.MAX_CARRIED_PARTS,
+		RunState.deposited_parts.size(), RunState.MECH_PARTS_REQUIRED,
+	]
 
 func _on_player_died() -> void:
 	game_over_panel.visible = true
