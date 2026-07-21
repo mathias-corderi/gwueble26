@@ -15,17 +15,20 @@ const ARENA := Rect2(-1180, -680, 2360, 1360)
 
 ## Central passive registry: display name, burn duration (seconds), max level.
 const PASSIVES := {
-	&"triple_shot": {name = "Triple Shot", duration = 12.0, max_level = 3},
-	&"pierce": {name = "Pierce", duration = 12.0, max_level = 3},
-	&"burn": {name = "Burn", duration = 14.0, max_level = 2},
-	&"explosive": {name = "Explosive", duration = 14.0, max_level = 2},
-	&"homing": {name = "Homing", duration = 10.0, max_level = 1},
+	&"triple_shot": {name = "Triple Shot", duration = 36.0, max_level = 3},
+	&"pierce": {name = "Pierce", duration = 36.0, max_level = 3},
+	&"burn": {name = "Burn", duration = 42.0, max_level = 2},
+	&"explosive": {name = "Explosive", duration = 42.0, max_level = 2},
+	&"homing": {name = "Homing", duration = 30.0, max_level = 1},
 }
 
 var run_time := 0.0
 var kills := 0
 ## passive_id -> {level: int, time_left: float}
 var passives := {}
+## Passive of the chair being sat on (set by the player). While seated, an
+## owned passive of the same type stays pinned at full instead of burning down.
+var pinned_passive: StringName = &""
 var game_over := false
 
 func _process(delta: float) -> void:
@@ -34,6 +37,9 @@ func _process(delta: float) -> void:
 	run_time += delta
 	var expired: Array[StringName] = []
 	for id in passives:
+		if id == pinned_passive:
+			passives[id].time_left = PASSIVES[id].duration
+			continue
 		passives[id].time_left -= delta
 		if passives[id].time_left <= 0.0:
 			expired.append(id)
@@ -47,6 +53,7 @@ func reset() -> void:
 	run_time = 0.0
 	kills = 0
 	passives.clear()
+	pinned_passive = &""
 	game_over = false
 
 func add_kill() -> void:

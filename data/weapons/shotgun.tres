@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapon_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Shotgun"
+color = Color(0.85, 0.55, 0.3, 1)
+handedness = 1
+max_ammo = 75
+fire_rate = 1.2
+damage = 7.5
+projectile_count = 6
+spread_degrees = 20.0
+projectile_speed = 700.0
+projectile_radius = 4.0
+projectile_color = Color(1, 0.82, 0.55, 1)
+projectile_lifetime = 0.5

@@ -31,7 +31,7 @@ Sprites are optional everywhere: if a sprite field is empty, the game draws the 
 
 - **Chairs**: drop your PNG in `art/`, open the chair's `.tres` in `data/chairs/`, and assign it to the **Sprite** field. The sprite is auto-scaled to the chair's footprint (~48×56 px on screen), so any resolution works — roughly square-ish with the backrest at the top reads best.
 - **Enemies**: same, on the `.tres` files in `data/enemies/` (**Sprite** field). Auto-scaled to the enemy's `radius`.
-- **Weapons**: `.tres` files in `data/weapons/` — **Sprite** (map pickup) and **Projectile Sprite** (authored pointing **right**; projectiles auto-rotate).
+- **Weapons**: `.tres` files in `data/weapons/` — **Sprite** (map pickup) and **Projectile Sprite** (authored pointing **right**; projectiles auto-rotate). For **BEAM** weapons the projectile sprite is a horizontally-tileable strip instead — see the weapon section below.
 - **8-direction animated art** (player body, held weapons, chairs) has its own full spec — see [docs/ANIMATION_GUIDE.md](docs/ANIMATION_GUIDE.md). The single-PNG fields above are quick placeholders; the animation system supersedes them when frames are assigned.
 
 Keep in mind enemies flash white when hit and orange while burning, and chairs blink during burnout — very dark or pure-white sprites make those cues hard to read.
@@ -51,13 +51,20 @@ Keep in mind enemies flash white when hit and orange while burning, and chairs b
 | `secondary_id` + `secondary_cooldown` / `secondary_uses` / `secondary_power` | Optional right-click ability while seated. Empty id = none. Implemented: `shockwave`. `secondary_uses = -1` means unlimited (cooldown only) |
 | `music`, `sprite`, `chair_frames` | Presentation (all optional; `chair_frames` is the 8-direction set, see the animation guide) |
 
-**How passives work now (burning bars)**: filling a chair's meter grants its passive with a decaying timer — when the bar burns out, the passive is lost. Filling another chair of the same type resets the timer and levels the passive up (up to its `max_level` in `RunState.PASSIVES`; e.g. Triple Shot stacks to Lv3, Homing doesn't level). Balance intuition: strong passive or secondary → compensate with low `max_hp`, long `meter_time`, or being static.
+**How passives work now (burning bars)**: filling a chair's meter grants its passive with a decaying timer — when the bar burns out, the passive is lost. Filling another chair of the same type resets the timer and levels the passive up (up to its `max_level` in `RunState.PASSIVES`; e.g. Triple Shot stacks to Lv3, Homing doesn't level). Sitting on a chair whose passive you already own keeps that passive's bar **pinned at full** while you stay seated — it only starts burning down again when you stand up. Balance intuition: strong passive or secondary → compensate with low `max_hp`, long `meter_time`, or being static.
 
 Note chairs no longer have a primary attack — that's the weapon's job now.
 
 ## Creating a WEAPON 🔫
 
-Duplicate a `.tres` in `data/weapons/` and edit in the inspector: `display_name`, `color`, `handedness` (one/two-handed — only affects animation variants), `max_ammo` (the weapon is discarded at 0; 1 ammo per shot), and the attack params (`fire_rate`, `damage`, `projectile_count`, `spread_degrees`, `projectile_speed/radius/color`). Weapons spawn on the map, are picked up on contact (max 3 carried), and are switched with the mouse wheel. Auto-loaded from the folder, no code needed.
+Duplicate a `.tres` in `data/weapons/` and edit in the inspector. Weapons spawn on the map, are picked up on contact (max 3 carried), and are switched with the mouse wheel. Auto-loaded from the folder, no code needed.
+
+Common fields: `display_name`, `color`, `handedness` (one/two-handed — only affects animation variants), `max_ammo` (the weapon is discarded at 0). `attack_type` decides how the attack fields are read:
+
+- **`PROJECTILE`** (bullets — Pistol, Assault Rifle, Shotgun): `fire_rate`, `damage`, `projectile_count`, `spread_degrees`, `projectile_speed/radius/color`, and `projectile_lifetime` (seconds before a bullet despawns — short values make short-range weapons like the Shotgun). 1 ammo per shot/volley.
+- **`BEAM`** (continuous laser, channeled while holding fire — Laser Gun): the same fields are reinterpreted. `fire_rate` = damage ticks per second, `damage` = damage per tick, **1 ammo per tick** (so `max_ammo / fire_rate` = seconds of total beam time), `projectile_count` + `spread_degrees` = fan of simultaneous beams, `projectile_radius` = beam half-width, `projectile_color` = beam tint. The ray visually extends past the screen edge (only enemies on camera are hit), is stopped by walls, and innately pierces everything it crosses. Passives adapt automatically: Triple Shot adds beams, Homing curves the beam smoothly through nearby enemies (it always leaves along the aim, then continues straight after the last target), Burn ignites everything touched, Explosive pops periodic mini-explosions on the enemies being hit, and Pierce widens the beam.
+
+**Beam art**: on a BEAM weapon, `projectile_sprite` is a **horizontally-tileable grayscale strip** (see `art/fx/laser_beam.png`, 16×16): its width tiles along the ray, its height stretches to the beam thickness, and the game tints it with `projectile_color`. Replace the PNG and the art updates itself; leave the field empty for a flat colored line placeholder.
 
 ## Creating an ENEMY 👾
 

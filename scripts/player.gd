@@ -13,6 +13,7 @@ signal weapons_changed
 signal pickup_rejected
 
 const PROJECTILE_SCENE := preload("res://scenes/projectile.tscn")
+const LASER_BEAM_SCENE := preload("res://scenes/laser_beam.tscn")
 const MAX_HP := 100.0
 const MOVE_SPEED := 320.0
 ## HP lost per second while standing — the "slow burn" pressure to find a chair.
@@ -36,6 +37,8 @@ var time_since_fire := 999.0
 var _nearby_chair: Chair
 var _dead := false
 var _fire_cooldown := 0.0
+## Live beams while channeling a BEAM weapon (one per fanned ray).
+var _active_beams: Array[LaserBeam] = []
 
 @onready var interact_area: Area2D = $InteractArea
 @onready var body_sprite: AnimatedSprite2D = $BodySprite
@@ -69,8 +72,15 @@ func _physics_process(delta: float) -> void:
 		_standing_process(delta)
 	else:
 		_seated_process(delta)
-	if Input.is_action_pressed("fire") and _fire_cooldown <= 0.0 and not weapons.is_empty():
-		_fire()
+	if Input.is_action_pressed("fire") and not weapons.is_empty():
+		if current_weapon().data.attack_type == WeaponData.AttackType.BEAM:
+			_channel_beam()
+		else:
+			_clear_beams()
+			if _fire_cooldown <= 0.0:
+				_fire()
+	else:
+		_clear_beams()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("weapon_next"):
@@ -106,6 +116,7 @@ func take_damage(amount: float) -> void:
 func on_chair_broken() -> void:
 	state = State.STANDING
 	current_chair = null
+	RunState.pinned_passive = &""
 	stood_up.emit()
 	MusicManager.stop_music()
 
@@ -126,11 +137,13 @@ func cycle_weapon(step: int) -> void:
 	if weapons.size() < 2:
 		return
 	current_weapon_index = wrapi(current_weapon_index + step, 0, weapons.size())
+	_clear_beams() # a beam from the previous weapon must not linger
 	weapons_changed.emit()
 
 func _sit(chair: Chair) -> void:
 	state = State.SEATED
 	current_chair = chair
+	RunState.pinned_passive = chair.data.passive_id
 	chair.occupy(self)
 	global_position = chair.global_position
 	velocity = Vector2.ZERO
@@ -158,10 +171,55 @@ func _fire() -> void:
 		projectile.configure(weapon_data, aim.rotated(angle_offset), levels)
 		projectile.position = global_position
 		container.add_child(projectile)
+	_spend_ammo(weapon)
+
+## Continuous BEAM weapons: keep one beam per fanned ray alive while fire is
+## held, refresh aim/passives every frame, and damage + spend 1 ammo per tick.
+func _channel_beam() -> void:
+	var weapon := current_weapon()
+	var weapon_data: WeaponData = weapon.data
+	var chair_passive: StringName = current_chair.data.passive_id if current_chair else &""
+	var levels := RunState.effective_passive_levels(chair_passive)
+	var count: int = weapon_data.projectile_count + 2 * int(levels.get(&"triple_shot", 0))
+	_sync_beam_count(count, weapon_data)
+	var aim := global_position.direction_to(get_global_mouse_position())
+	var base_spread := deg_to_rad(weapon_data.spread_degrees)
+	for i in _active_beams.size():
+		var angle_offset := 0.0
+		if count > 1:
+			var fan := maxf(base_spread, deg_to_rad(MIN_FAN_SPREAD_DEG))
+			angle_offset = lerpf(-fan * 0.5, fan * 0.5, float(i) / float(count - 1))
+		_active_beams[i].update_path(global_position, aim.rotated(angle_offset), levels)
+	if _fire_cooldown <= 0.0:
+		_fire_cooldown = 1.0 / maxf(weapon_data.fire_rate, 0.1)
+		time_since_fire = 0.0
+		for beam in _active_beams:
+			beam.tick_damage()
+		_spend_ammo(weapon)
+
+func _sync_beam_count(count: int, weapon_data: WeaponData) -> void:
+	while _active_beams.size() > count:
+		_active_beams.pop_back().queue_free()
+	var container := get_tree().get_first_node_in_group("projectile_container")
+	while _active_beams.size() < count:
+		var beam: LaserBeam = LASER_BEAM_SCENE.instantiate()
+		beam.configure(weapon_data)
+		container.add_child(beam)
+		_active_beams.append(beam)
+
+func _clear_beams() -> void:
+	if _active_beams.is_empty():
+		return
+	for beam in _active_beams:
+		beam.queue_free()
+	_active_beams.clear()
+
+func _spend_ammo(weapon: Dictionary) -> void:
 	weapon.ammo -= 1
 	if weapon.ammo <= 0:
 		weapons.remove_at(current_weapon_index)
 		current_weapon_index = clampi(current_weapon_index, 0, maxi(weapons.size() - 1, 0))
+		_clear_beams()
 	weapons_changed.emit()
 
 func _change_hp(delta_hp: float) -> void:
@@ -171,6 +229,7 @@ func _change_hp(delta_hp: float) -> void:
 	hp_changed.emit(hp, MAX_HP)
 	if hp <= 0.0:
 		_dead = true
+		_clear_beams()
 		died.emit()
 
 func _update_nearby_chair() -> void:

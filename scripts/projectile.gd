@@ -3,7 +3,6 @@ extends Area2D
 ## A single shot from a weapon. Passive levels are baked in at spawn time, so
 ## any weapon automatically benefits from every burning passive.
 
-const LIFETIME := 2.5
 const HOMING_TURN_RATE := 5.0
 const BURN_DPS_PER_LEVEL := 5.0
 const BURN_DURATION := 2.5
@@ -21,6 +20,7 @@ var burn_level := 0
 var explosive_level := 0
 var pierce_left := 0
 var velocity := Vector2.ZERO
+var lifetime := 2.5
 
 var _age := 0.0
 
@@ -31,6 +31,7 @@ func configure(weapon: WeaponData, direction: Vector2, passive_levels: Dictionar
 	color = weapon.projectile_color
 	sprite = weapon.projectile_sprite
 	velocity = direction * weapon.projectile_speed
+	lifetime = weapon.projectile_lifetime
 	homing = int(passive_levels.get(&"homing", 0)) > 0
 	burn_level = int(passive_levels.get(&"burn", 0))
 	explosive_level = int(passive_levels.get(&"explosive", 0))
@@ -45,7 +46,7 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_age += delta
-	if _age > LIFETIME:
+	if _age > lifetime:
 		queue_free()
 		return
 	if homing:
