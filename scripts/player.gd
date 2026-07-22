@@ -43,6 +43,7 @@ var time_since_damage := 999.0
 
 var _nearby_chair: Chair
 var _dead := false
+var _invulnerable := false
 var _fire_cooldown := 0.0
 ## Live beams while channeling a BEAM weapon (one per fanned ray).
 var _active_beams: Array[LaserBeam] = []
@@ -115,14 +116,25 @@ func _seated_process(delta: float) -> void:
 	if Input.is_action_just_pressed("secondary_fire") and current_chair:
 		current_chair.try_secondary()
 	if Input.is_action_just_pressed("interact") and current_chair:
-		current_chair.break_chair() # standing up voluntarily sacrifices the chair
+		# Sandbox: E fills the meter and breaks the seat (dropping a part) so mech
+		# parts farm quickly; the real game just sacrifices the chair to stand up.
+		if RunState.sandbox_mode() and not (current_chair is Mech):
+			current_chair.force_burnout()
+		else:
+			current_chair.break_chair()
 
 func take_damage(amount: float) -> void:
+	if _invulnerable:
+		return
 	time_since_damage = 0.0
 	_change_hp(-amount)
 	modulate = Color(2.0, 1.2, 1.2)
 	var tween := create_tween()
 	tween.tween_property(self, "modulate", Color.WHITE, 0.15)
+
+## Toggled by the Wheelchair dash: no damage lands while dashing.
+func set_invulnerable(value: bool) -> void:
+	_invulnerable = value
 
 ## Called by the chair whenever it breaks under us (voluntary stand-up included).
 func on_chair_broken() -> void:
@@ -233,6 +245,25 @@ func _fire() -> void:
 		projectile.position = global_position
 		container.add_child(projectile)
 	_spend_ammo(weapon)
+
+## Fires one bullet per direction using the held weapon + current passives,
+## optionally enlarged. Used by the Eyed Chair's eye_burst. No-op if unarmed
+## or holding a beam weapon (which has no bullets to mimic).
+func fire_burst(directions: Array, radius_mult := 1.0) -> bool:
+	var weapon := current_weapon()
+	if weapon.is_empty() or weapon.data.attack_type == WeaponData.AttackType.BEAM:
+		return false
+	var weapon_data: WeaponData = weapon.data
+	var chair_passive: StringName = current_chair.data.passive_id if current_chair else &""
+	var levels := RunState.effective_passive_levels(chair_passive)
+	var container := get_tree().get_first_node_in_group("projectile_container")
+	for dir: Vector2 in directions:
+		var projectile: Projectile = PROJECTILE_SCENE.instantiate()
+		projectile.configure(weapon_data, dir, levels)
+		projectile.radius *= radius_mult
+		projectile.position = global_position
+		container.add_child(projectile)
+	return true
 
 ## Continuous BEAM weapons: keep one beam per fanned ray alive while fire is
 ## held, refresh aim/passives every frame, and damage + spend 1 ammo per tick.

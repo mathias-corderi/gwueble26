@@ -4,12 +4,13 @@
 
 [resource]
 script = ExtResource("1_script")
-display_name = "Electric Chair"
-color = Color(0.35, 0.75, 1, 1)
-max_hp = 65.0
+display_name = "Eyed Chair"
+color = Color(0.95, 0.85, 0.35, 1)
+max_hp = 72.0
 meter_time = 11.0
-move_speed = 210.0
-passive_id = &"arc"
-secondary_id = &""
-break_effect_id = &"electric_burst"
-break_effect_power = 1.0
+move_speed = 230.0
+passive_id = &"triple_shot"
+secondary_id = &"eye_burst"
+secondary_cooldown = 3.0
+secondary_uses = 3
+secondary_power = 1.0

@@ -47,16 +47,22 @@ Keep in mind enemies flash white when hit and orange while burning, and chairs b
 | `max_hp` | How much enemy punishment the chair takes before breaking |
 | `meter_time` | Seconds seated until its passive is granted/refreshed (then the chair burns out) |
 | `move_speed` | 0 = static chair; > 0 = it's a **mount** you drive with WASD while seated, at this speed |
-| `passive_id` | One of the ids in `RunState.PASSIVES` (`triple_shot`, `homing`, `burn`, `explosive`, `pierce`, `arc`) |
-| `secondary_id` + `secondary_cooldown` / `secondary_uses` / `secondary_power` | Optional right-click ability while seated. Empty id = none. Implemented: `shockwave`. `secondary_uses = -1` means unlimited (cooldown only) |
-| `break_effect_id` + `break_effect_power` | Optional blast fired whenever the chair breaks — from enemy damage, burnout, *or* standing up voluntarily, so popping your own chair is a tactic. Empty id = none. Implemented: `electric_burst` (wide-area electric damage). `break_effect_power` scales its radius and damage |
+| `passive_id` | One of the ids in `RunState.PASSIVES` — see the list below |
+| `secondary_id` + `secondary_cooldown` / `secondary_uses` / `secondary_power` | Optional right-click ability while seated. Empty id = none. `secondary_uses = -1` means unlimited (cooldown only). Implemented: `shockwave`, `musical_wave` (push + slow), `eye_burst` (8 big bullets mimicking your weapon), `dash` (charge forward, invulnerable, damaging contacts), `missiles` (10 homing missiles), `charge_laser` (1 s wind-up, then a giant beam), `spear` (wide short lunge) |
+| `break_effect_id` + `break_effect_power` | Optional blast fired whenever the chair breaks — from enemy damage, burnout, *or* standing up voluntarily, so popping your own chair is a tactic. Empty id = none (every break already knocks enemies back). Implemented: `electric_burst`, `shatter` (damaging seat fragments), `blast` (wide damaging shove), `spear_burst` (spears in the 4 cardinal directions). `break_effect_power` scales radius and damage |
 | `music`, `sprite`, `chair_frames` | Presentation (all optional; `chair_frames` is the 8-direction set, see the animation guide) |
 
 **How passives work now (burning bars)**: filling a chair's meter grants its passive with a decaying timer — when the bar burns out, the passive is lost. Filling another chair of the same type resets the timer and levels the passive up (up to its `max_level` in `RunState.PASSIVES`; e.g. Triple Shot stacks to Lv3, Homing doesn't level). Sitting on a chair whose passive you already own keeps that passive's bar **pinned at full** while you stay seated — it only starts burning down again when you stand up. Balance intuition: strong passive or secondary → compensate with low `max_hp`, long `meter_time`, or being static.
 
 Note chairs no longer have a primary attack — that's the weapon's job now. Unoccupied chairs are recycled after 2 minutes, but only while off-camera, so one never vanishes in front of the player.
 
+**Passive ids** (in `RunState.PASSIVES`): `triple_shot` (extra bullets), `pierce` (bullets pass through enemies; also makes the laser wider), `homing` (bullets/laser curve toward enemies), `arc` (chain lightning on hit — see below), `split` (bullets scatter into fragments on hit, +1 per level; the laser instead forks `1 + level` branch beams at every enemy it pierces), `knockback` (bullets shove enemies), `poison` (a % of max HP per second, green — the current fire/DoT), `sonic` (small AoE that damages + slows on hit), `bounce` (plain bullets ricochet off enemies to the next one; pierce bullets and the laser instead reflect off the **camera edge**, as if the screen border were a wall). `burn`, `explosive` and the `shockwave` secondary stay defined as reusable mechanics but no default chair grants them.
+
+**Laser feel**: the beam moves with inertia — the near end tracks the cursor immediately and the far end lags behind, so sweeping it whips like a hose instead of snapping like a laser pointer (tuned via `SEGMENTS` / `SAMPLES_PER_SEGMENT` in `laser_beam.gd`).
+
 **The `arc` passive (Electric Arc)**: every bullet that hits an enemy fires a chain of lightning to the nearest enemies within a large radius, and each passive level adds one more jump. The laser triggers it too, with the cooldown tracked **per hit enemy** — a beam crossing three enemies throws three independent arcs.
+
+**Testing everything at once**: open `scenes/sandbox.tscn` in Godot and press **F6** — it lays out one of every chair and weapon (each respawns 2 s after use) and spawns enemies normally. To build the Mech, farm parts fast: seat a chair and press **E**, which fills its meter and breaks it (dropping a part) in one go, then haul the parts to the central **station** (carrying is uncapped here) and board the assembled Mech. It's editor-only; the game still starts from `main.tscn`.
 
 ## Creating a WEAPON 🔫
 

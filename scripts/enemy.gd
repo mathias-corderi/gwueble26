@@ -8,6 +8,12 @@ var hp := 0.0
 
 var _burn_time := 0.0
 var _burn_dps := 0.0
+## Poison is a burn variant: a fraction of max HP per second, tinted green.
+var _poison_time := 0.0
+var _poison_pct := 0.0
+## Slow multiplies movement speed (< 1) while active.
+var _slow_time := 0.0
+var _slow_factor := 1.0
 var _stun_time := 0.0
 var _knockback := Vector2.ZERO
 var _attack_cooldown := 0.0
@@ -38,12 +44,21 @@ func _physics_process(delta: float) -> void:
 		take_damage(_burn_dps * delta, false)
 		if _burn_time <= 0.0:
 			queue_redraw()
+	if _poison_time > 0.0:
+		_poison_time -= delta
+		take_damage(data.max_hp * _poison_pct * delta, false)
+		if _poison_time <= 0.0:
+			queue_redraw()
+	var speed := data.speed
+	if _slow_time > 0.0:
+		_slow_time -= delta
+		speed *= _slow_factor
 	if _stun_time > 0.0:
 		_stun_time -= delta
 		velocity = _knockback
 		_knockback = _knockback.move_toward(Vector2.ZERO, 1400.0 * delta)
 	elif is_instance_valid(_player):
-		velocity = _desired_direction() * data.speed
+		velocity = _desired_direction() * speed
 	else:
 		velocity = Vector2.ZERO
 	move_and_slide()
@@ -94,6 +109,16 @@ func apply_burn(dps: float, duration: float) -> void:
 	_burn_time = duration
 	queue_redraw()
 
+## Poison: loses `pct` of its max HP per second (green), for `duration` seconds.
+func apply_poison(pct: float, duration: float) -> void:
+	_poison_pct = pct
+	_poison_time = duration
+	queue_redraw()
+
+func apply_slow(factor: float, duration: float) -> void:
+	_slow_factor = factor
+	_slow_time = duration
+
 func apply_knockback(impulse: Vector2, stun := 0.5) -> void:
 	_knockback = impulse
 	_stun_time = stun
@@ -113,10 +138,16 @@ func _try_attack() -> void:
 
 func _draw() -> void:
 	if data.sprite:
-		var tint := Color(1.6, 1.15, 0.7) if _burn_time > 0.0 else Color.WHITE
+		var tint := Color.WHITE
+		if _poison_time > 0.0:
+			tint = Color(0.7, 1.5, 0.7)
+		elif _burn_time > 0.0:
+			tint = Color(1.6, 1.15, 0.7)
 		SpriteFit.draw(self, data.sprite, Vector2.ONE * data.radius * 2.0, tint)
 	else:
 		var body_color := data.color
-		if _burn_time > 0.0:
+		if _poison_time > 0.0:
+			body_color = body_color.lerp(Color(0.3, 0.9, 0.2), 0.6)
+		elif _burn_time > 0.0:
 			body_color = body_color.lerp(Color.ORANGE, 0.6)
 		draw_circle(Vector2.ZERO, data.radius, body_color)

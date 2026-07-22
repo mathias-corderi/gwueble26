@@ -5,11 +5,14 @@
 
 [resource]
 script = ExtResource("1_script")
-display_name = "Musical Chair"
+display_name = "Music Chair"
 color = Color(0.75, 0.45, 0.95, 1)
 max_hp = 70.0
-meter_time = 10.0
-move_speed = 240.0
-passive_id = &"homing"
-secondary_id = &""
+meter_time = 11.0
+move_speed = 230.0
+passive_id = &"sonic"
+secondary_id = &"musical_wave"
+secondary_cooldown = 5.0
+secondary_uses = -1
+secondary_power = 1.0
 music = ExtResource("2_music")

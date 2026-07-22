@@ -13,7 +13,7 @@ var _chairs: Node2D
 var _enemies: Node2D
 var _projectiles: Node
 var _weapon_spawner: Node
-var _gamer_chair: Chair
+var _mount_chair: Chair
 var _mount_start_x := 0.0
 var _beam_enemy_a: Enemy
 var _beam_enemy_b: Enemy
@@ -22,6 +22,8 @@ var _arc_far: Enemy
 var _burst_enemy: Enemy
 var _mech: Mech
 var _hp_before := 0.0
+var _poison_enemy: Enemy
+var _poison_hp := 0.0
 
 func _ready() -> void:
 	var main: Node = load("res://scenes/main.tscn").instantiate()
@@ -52,39 +54,39 @@ func _physics_process(_delta: float) -> void:
 			_player.cycle_weapon(1)
 			_check(_player.current_weapon().data.display_name == "Pistol", "wheel switch cycles weapons")
 		70:
-			_gamer_chair = CHAIR_SCENE.instantiate()
-			_gamer_chair.setup(load("res://data/chairs/gamer_chair.tres"))
-			_gamer_chair.position = _player.global_position + Vector2(40, 0)
-			_chairs.add_child(_gamer_chair)
+			_mount_chair = CHAIR_SCENE.instantiate()
+			_mount_chair.setup(load("res://data/chairs/eyed_chair.tres"))
+			_mount_chair.position = _player.global_position + Vector2(40, 0)
+			_chairs.add_child(_mount_chair)
 		75:
-			_player._sit(_gamer_chair)
+			_player._sit(_mount_chair)
 			_check(_player.state == Player.State.SEATED, "player seated")
 			Input.action_press("secondary_fire")
 		77:
 			Input.action_release("secondary_fire")
 		85:
-			_check(_gamer_chair.secondary_uses_left == 2, "secondary consumed a use")
-			_check(_gamer_chair.secondary_cooldown_left > 0.0, "secondary cooldown started")
+			_check(_mount_chair.secondary_uses_left == 2, "secondary consumed a use")
+			_check(_mount_chair.secondary_cooldown_left > 0.0, "secondary cooldown started")
 			_mount_start_x = _player.global_position.x
 			Input.action_press("move_right")
 		115:
 			Input.action_release("move_right")
 			_check(_player.global_position.x > _mount_start_x + 50.0,
 				"mount chair drives with move keys")
-			_gamer_chair.meter = _gamer_chair.data.meter_time - 0.05
+			_mount_chair.meter = _mount_chair.data.meter_time - 0.05
 		130:
-			_check(RunState.passive_level(&"burn") == 1, "meter fill grants passive level 1")
-			RunState.grant_passive(&"burn")
-			_check(RunState.passive_level(&"burn") == 2, "second grant levels the passive up")
-			_check(RunState.passives[&"burn"].time_left > 13.0, "grant refreshes the burn timer")
-			RunState.passives[&"burn"].time_left = 5.0 # seated on a burn chair: should re-pin to full
+			_check(RunState.passive_level(&"triple_shot") == 1, "meter fill grants passive level 1")
+			RunState.grant_passive(&"triple_shot")
+			_check(RunState.passive_level(&"triple_shot") == 2, "second grant levels the passive up")
+			_check(RunState.passives[&"triple_shot"].time_left > 13.0, "grant refreshes the timer")
+			RunState.passives[&"triple_shot"].time_left = 5.0 # seated: should re-pin to full
 		140:
-			_check(RunState.passives[&"burn"].time_left > 40.0,
+			_check(RunState.passives[&"triple_shot"].time_left > 30.0,
 				"seated chair pins its own passive bar at full")
-			_gamer_chair.break_chair() # stand up so the bar can burn out
-			RunState.passives[&"burn"].time_left = 0.05
+			_mount_chair.break_chair() # stand up so the bar can burn out
+			RunState.passives[&"triple_shot"].time_left = 0.05
 		150:
-			_check(RunState.passive_level(&"burn") == 0, "passive expires when its bar burns out")
+			_check(RunState.passive_level(&"triple_shot") == 0, "passive expires when its bar burns out")
 			_player.current_weapon().ammo = 1
 			Input.action_press("fire")
 		170:
@@ -109,6 +111,23 @@ func _physics_process(_delta: float) -> void:
 			_check(_player._active_beams[0]._points.size() > 2,
 				"homing bends the beam through nearby enemies")
 			Input.action_release("fire")
+		204:
+			# Laser split: the beam forks branches that damage enemies off its line.
+			var split_beam: LaserBeam = load("res://scenes/laser_beam.tscn").instantiate()
+			split_beam.configure(load("res://data/weapons/laser_gun.tres"))
+			_projectiles.add_child(split_beam)
+			var split_main := _spawn_brute(_player.global_position + Vector2.RIGHT * 150.0)
+			# On the +spread branch of the beam, but well off its main (horizontal) line.
+			var split_branch := _spawn_brute(_player.global_position + Vector2.RIGHT * 150.0
+				+ Vector2.RIGHT.rotated(LaserBeam.BRANCH_SPREAD) * 130.0)
+			split_beam.update_path(_player.global_position, Vector2.RIGHT, {&"split": 1})
+			split_beam.tick_damage()
+			_check(split_main.hp < split_main.data.max_hp, "the laser hits the enemy on its line")
+			_check(split_branch.hp < split_branch.data.max_hp,
+				"the split laser forks a branch onto a nearby enemy")
+			split_beam.queue_free()
+			split_main.queue_free() # clear these before the arc-chain test at 210
+			split_branch.queue_free()
 		205:
 			_check(_player._active_beams.is_empty(), "beam clears when fire is released")
 			var shotgun: WeaponData = load("res://data/weapons/shotgun.tres")
@@ -162,7 +181,7 @@ func _physics_process(_delta: float) -> void:
 			_check(_count_parts() == parts_before + 1,
 				"a meter-filled chair drops a mech part when it breaks")
 			# Carrying is capped; extra parts stay on the map.
-			var source: ChairData = load("res://data/chairs/gamer_chair.tres")
+			var source: ChairData = load("res://data/chairs/eyed_chair.tres")
 			for i in RunState.MAX_CARRIED_PARTS + 2:
 				RunState.carry_part(source)
 			_check(RunState.carried_parts.size() == RunState.MAX_CARRIED_PARTS,
@@ -176,10 +195,10 @@ func _physics_process(_delta: float) -> void:
 				"the station reports one build stage per delivered part")
 			_check(station._stage_texture(station.build_stage()) == null,
 				"missing build-stage art falls back to the placeholder")
-			# Fill the rest with burn chairs so the Mech gets a stacked passive.
-			var burn_chair: ChairData = load("res://data/chairs/gamer_chair.tres")
+			# Fill the rest with the same chair type so the Mech stacks a passive.
+			var stack_chair: ChairData = load("res://data/chairs/eyed_chair.tres")
 			while RunState.deposited_parts.size() < RunState.MECH_PARTS_REQUIRED:
-				RunState.carry_part(burn_chair)
+				RunState.carry_part(stack_chair)
 				RunState.deposit_parts()
 			_check(RunState.deposited_parts.size() == RunState.MECH_PARTS_REQUIRED,
 				"the mech reaches its part requirement")
@@ -196,12 +215,12 @@ func _physics_process(_delta: float) -> void:
 			_player._sit(_mech)
 			_check(_player.state == Player.State.SEATED, "player boards the mech")
 			_check(RunState.mech_active, "boarding flips the mech_active gate")
-			_check(RunState.passive_level(&"burn") >= 2,
+			_check(RunState.passive_level(&"triple_shot") >= 2,
 				"the mech stacks passives from repeated chair parts")
-			_check(&"burn" in RunState.pinned_passives, "mech passives are pinned")
-			RunState.passives[&"burn"].time_left = 0.05
+			_check(&"triple_shot" in RunState.pinned_passives, "mech passives are pinned")
+			RunState.passives[&"triple_shot"].time_left = 0.05
 		235:
-			_check(RunState.passive_level(&"burn") >= 2, "mech passives never burn out")
+			_check(RunState.passive_level(&"triple_shot") >= 2, "mech passives never burn out")
 			_check(_chairs.get_children().all(func(n: Node) -> bool: return not (n is Chair)),
 				"boarding clears the remaining chairs")
 			_check(get_tree().get_nodes_in_group("weapon_pickups").is_empty(),
@@ -269,6 +288,72 @@ func _physics_process(_delta: float) -> void:
 			_hp_before = _player.hp
 			shot._on_body_entered(_mech)
 			_check(_player.hp < _hp_before, "an enemy shot on the mech hurts the pilot")
+		257:
+			for id in [&"split", &"knockback", &"poison", &"sonic", &"bounce"]:
+				_check(id in RunState.PASSIVES, "passive '%s' is registered" % id)
+			# Split scatters (1 + level) fragments on hit.
+			var proj: Projectile = load("res://scenes/projectile.tscn").instantiate()
+			_projectiles.add_child(proj)
+			proj.split_level = 2
+			var frags_before := _projectiles.get_child_count()
+			proj._split()
+			_check(_projectiles.get_child_count() == frags_before + 3,
+				"split scatters (1 + level) fragments")
+			proj.queue_free()
+			# Pierce/laser bullets bounce off the camera edge; plain bullets off enemies.
+			var pistol: WeaponData = load("res://data/weapons/pistol.tres")
+			var wall_b: Projectile = load("res://scenes/projectile.tscn").instantiate()
+			wall_b.configure(pistol, Vector2.RIGHT, {&"pierce": 1, &"bounce": 2})
+			_check(wall_b.bounce_left == 2 and wall_b.bounces_off_walls,
+				"pierce bullets bounce off the camera edge")
+			wall_b.free()
+			var enemy_b: Projectile = load("res://scenes/projectile.tscn").instantiate()
+			enemy_b.configure(pistol, Vector2.RIGHT, {&"bounce": 1})
+			_check(enemy_b.bounce_left == 1 and not enemy_b.bounces_off_walls,
+				"plain bullets ricochet off enemies")
+			enemy_b.free()
+			# Poison drains a fraction of max HP over time.
+			_poison_enemy = _spawn_brute(_player.global_position + Vector2(0, 640))
+			_poison_enemy.apply_poison(0.5, 2.0)
+			_poison_hp = _poison_enemy.hp
+		258:
+			# Every new secondary runs without error and starts its cooldown.
+			for path in ["musical_chair", "eyed_chair", "wheelchair", "smart_chair", "throne", "spiked_chair"]:
+				var c: Chair = CHAIR_SCENE.instantiate()
+				c.setup(load("res://data/chairs/%s.tres" % path))
+				c.position = _player.global_position + Vector2(0, 820)
+				_chairs.add_child(c)
+				c.occupied = true
+				c.occupant = _player
+				c.try_secondary()
+				_check(c.secondary_cooldown_left > 0.0, "%s secondary fires and cools down" % path)
+				if c.data.secondary_id == &"dash":
+					_check(_player._invulnerable, "the wheelchair dash grants invulnerability")
+					_player.set_invulnerable(false)
+				c.occupied = false
+				c.queue_free()
+		259:
+			_check(is_instance_valid(_poison_enemy) and _poison_enemy.hp < _poison_hp,
+				"poison drains enemy HP over time")
+			# Break effects: shatter scatters fragments, blast damages, spear_burst fires spears.
+			var shatter_before := _projectiles.get_child_count()
+			_detached_chair("plastic_chair", _player.global_position + Vector2(0, 900)).break_chair()
+			_check(_projectiles.get_child_count() > shatter_before, "shatter break scatters fragments")
+			var blast_enemy := _spawn_brute(_player.global_position + Vector2(0, 980))
+			_detached_chair("throne", blast_enemy.global_position + Vector2(30, 0)).break_chair()
+			_check(blast_enemy.hp < blast_enemy.data.max_hp, "blast break damages nearby enemies")
+			_detached_chair("spiked_chair", _player.global_position + Vector2(0, 1040)).break_chair()
+			var spears := _projectiles.get_children().filter(
+				func(n: Node) -> bool: return n is SpearAttack).size()
+			_check(spears >= 4, "spear_burst break fires spears in the 4 cardinal directions")
+			# Sandbox helper: force_burnout fills the meter (granting the passive and
+			# dropping a mech part) then breaks the chair, all in one call.
+			var fb_parts_before := _count_parts()
+			var fb_chair := _detached_chair("smart_chair", _player.global_position + Vector2(0, 1120))
+			var fb_passive := fb_chair.data.passive_id
+			fb_chair.force_burnout()
+			_check(RunState.passive_level(fb_passive) >= 1, "force_burnout grants the chair's passive")
+			_check(_count_parts() == fb_parts_before + 1, "force_burnout drops a mech part")
 		260:
 			# Guards the restart bug: reset() must announce the wipe so the HUD
 			# drops passive bars built from the previous run.
@@ -283,6 +368,13 @@ func _physics_process(_delta: float) -> void:
 func _spawn_chair_at(pos: Vector2) -> Chair:
 	var chair: Chair = CHAIR_SCENE.instantiate()
 	chair.setup(load("res://data/chairs/plastic_chair.tres"))
+	chair.position = pos
+	_chairs.add_child(chair)
+	return chair
+
+func _detached_chair(name: String, pos: Vector2) -> Chair:
+	var chair: Chair = CHAIR_SCENE.instantiate()
+	chair.setup(load("res://data/chairs/%s.tres" % name))
 	chair.position = pos
 	_chairs.add_child(chair)
 	return chair

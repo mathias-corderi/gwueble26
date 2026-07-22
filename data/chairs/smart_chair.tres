@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ChairData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/chair_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Smart Chair"
+color = Color(0.3, 0.8, 0.7, 1)
+max_hp = 70.0
+meter_time = 12.0
+move_speed = 230.0
+passive_id = &"homing"
+secondary_id = &"missiles"
+secondary_cooldown = 3.0
+secondary_uses = -1
+secondary_power = 1.0

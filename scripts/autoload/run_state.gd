@@ -21,6 +21,8 @@ const MECH_PARTS_REQUIRED := 10
 const MAX_CARRIED_PARTS := 3
 
 ## Central passive registry: display name, burn duration (seconds), max level.
+## burn/explosive/shockwave stay defined as reusable mechanics even though the
+## default chair roster no longer grants them.
 const PASSIVES := {
 	&"triple_shot": {name = "Triple Shot", duration = 36.0, max_level = 3},
 	&"pierce": {name = "Pierce", duration = 36.0, max_level = 3},
@@ -28,6 +30,11 @@ const PASSIVES := {
 	&"explosive": {name = "Explosive", duration = 42.0, max_level = 2},
 	&"homing": {name = "Homing", duration = 30.0, max_level = 1},
 	&"arc": {name = "Electric Arc", duration = 36.0, max_level = 3},
+	&"split": {name = "Split Shot", duration = 36.0, max_level = 3},
+	&"knockback": {name = "Knockback", duration = 36.0, max_level = 1},
+	&"poison": {name = "Poison", duration = 42.0, max_level = 3},
+	&"sonic": {name = "Sonic Burst", duration = 42.0, max_level = 3},
+	&"bounce": {name = "Ricochet", duration = 36.0, max_level = 3},
 }
 
 var run_time := 0.0
@@ -106,9 +113,15 @@ func passive_level(passive_id: StringName) -> int:
 func passive_name(passive_id: StringName) -> String:
 	return PASSIVES.get(passive_id, {}).get("name", String(passive_id))
 
-## Picks up a dropped part; false when both hands are full.
+## True while the Godot-only sandbox scene is running (it tags itself with the
+## "sandbox" group). Loosens a couple of limits to make testing faster.
+func sandbox_mode() -> bool:
+	var tree := get_tree()
+	return tree != null and tree.get_first_node_in_group("sandbox") != null
+
+## Picks up a dropped part; false when both hands are full (uncapped in sandbox).
 func carry_part(source: ChairData) -> bool:
-	if carried_parts.size() >= MAX_CARRIED_PARTS:
+	if carried_parts.size() >= MAX_CARRIED_PARTS and not sandbox_mode():
 		return false
 	carried_parts.append(source)
 	parts_changed.emit()

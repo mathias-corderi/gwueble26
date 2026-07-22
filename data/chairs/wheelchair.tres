@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="ChairData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/chair_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Wheelchair"
+color = Color(0.6, 0.65, 0.7, 1)
+max_hp = 46.0
+meter_time = 9.0
+move_speed = 330.0
+passive_id = &"knockback"
+secondary_id = &"dash"
+secondary_cooldown = 4.0
+secondary_uses = -1
+secondary_power = 1.0

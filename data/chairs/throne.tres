@@ -6,15 +6,17 @@
 
 [resource]
 script = ExtResource("1_script")
-display_name = "Throne"
-color = Color(0.95, 0.78, 0.2, 1)
-max_hp = 140.0
-meter_time = 18.0
-move_speed = 0.0
-passive_id = &"explosive"
-secondary_id = &"shockwave"
-secondary_cooldown = 6.0
+display_name = "Atomic Throne"
+color = Color(0.55, 0.9, 0.35, 1)
+max_hp = 120.0
+meter_time = 10.0
+move_speed = 150.0
+passive_id = &"poison"
+secondary_id = &"charge_laser"
+secondary_cooldown = 7.0
 secondary_uses = -1
-secondary_power = 1.5
+secondary_power = 1.0
+break_effect_id = &"blast"
+break_effect_power = 1.0
 music = ExtResource("2_music")
 sprite = ExtResource("3_sprite")

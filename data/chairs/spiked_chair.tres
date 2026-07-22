@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="ChairData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/chair_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Spiked Chair"
+color = Color(0.7, 0.3, 0.35, 1)
+max_hp = 140.0
+meter_time = 8.0
+move_speed = 0.0
+passive_id = &"pierce"
+secondary_id = &"spear"
+secondary_cooldown = 1.5
+secondary_uses = -1
+secondary_power = 1.0
+break_effect_id = &"spear_burst"
+break_effect_power = 1.0
