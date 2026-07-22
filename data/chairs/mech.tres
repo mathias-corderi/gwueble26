@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="ChairData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/chair_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Mech"
+color = Color(0.6, 0.7, 0.85, 1)
+spawns_on_map = false
+max_hp = 1.0
+meter_time = 0.0
+move_speed = 220.0
+passive_id = &""
+secondary_id = &"shockwave"
+secondary_cooldown = 3.0
+secondary_uses = -1
+secondary_power = 2.0
+break_effect_id = &""
+break_effect_power = 1.0

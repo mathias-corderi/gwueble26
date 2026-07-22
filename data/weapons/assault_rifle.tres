@@ -4,12 +4,12 @@
 
 [resource]
 script = ExtResource("1_script")
-display_name = "Rifle"
+display_name = "Assault Rifle"
 color = Color(0.55, 0.65, 0.4, 1)
 handedness = 1
-max_ammo = 120
+max_ammo = 360
 fire_rate = 7.0
-damage = 5.0
+damage = 6.5
 projectile_count = 1
 spread_degrees = 6.0
 projectile_speed = 750.0

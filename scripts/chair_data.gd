@@ -7,6 +7,8 @@ extends Resource
 
 @export var display_name: String = "Chair"
 @export var color: Color = Color.WHITE
+## False keeps it out of the map spawner (e.g. the Mech, which is assembled).
+@export var spawns_on_map: bool = true
 @export var max_hp: float = 60.0
 ## Seconds the player must stay seated for the passive to be granted/refreshed.
 @export var meter_time: float = 12.0
@@ -26,6 +28,13 @@ extends Resource
 @export var secondary_uses: int = -1
 ## Generic magnitude multiplier (shockwave: knockback force and damage).
 @export var secondary_power: float = 1.0
+
+@export_group("Break Effect")
+## Fired whenever the chair breaks (enemy damage, burnout or standing up).
+## Empty = none. Implemented: "electric_burst".
+@export var break_effect_id: StringName = &""
+## Generic magnitude multiplier (electric_burst: radius and damage).
+@export var break_effect_power: float = 1.0
 
 @export_group("Presentation")
 @export var music: AudioStream

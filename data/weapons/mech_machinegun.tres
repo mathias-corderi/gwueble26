@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapon_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Mech Chaingun"
+color = Color(0.75, 0.8, 0.9, 1)
+handedness = 1
+max_ammo = -1
+reload_interval = 0.0
+spawns_on_map = false
+fire_rate = 11.0
+damage = 7.0
+projectile_count = 1
+spread_degrees = 8.0
+projectile_speed = 900.0
+projectile_radius = 5.0
+projectile_color = Color(1, 0.9, 0.6, 1)
+projectile_lifetime = 1.6

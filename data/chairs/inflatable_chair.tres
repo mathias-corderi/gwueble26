@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="ChairData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/chair_data.gd" id="1_script"]
+
+[resource]
+script = ExtResource("1_script")
+display_name = "Inflatable Chair"
+color = Color(1, 0.55, 0.5, 1)
+max_hp = 68.0
+meter_time = 11.0
+move_speed = 230.0
+passive_id = &"bounce"
+secondary_id = &""

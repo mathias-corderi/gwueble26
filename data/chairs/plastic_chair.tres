@@ -7,9 +7,11 @@
 script = ExtResource("1_script")
 display_name = "Plastic Chair"
 color = Color(0.92, 0.93, 0.97, 1)
-max_hp = 50.0
+max_hp = 130.0
 meter_time = 8.0
-move_speed = 200.0
-passive_id = &"triple_shot"
+move_speed = 0.0
+passive_id = &"split"
 secondary_id = &""
+break_effect_id = &"shatter"
+break_effect_power = 1.0
 music = ExtResource("2_music")
