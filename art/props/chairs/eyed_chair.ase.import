@@ -3,12 +3,12 @@
 importer="aseprite_wizard.plugin.noop"
 type="PackedDataContainer"
 uid="uid://d4gj2qa1rgp56"
-path="res://.godot/imported/eyed_chair.ase-dab5aaee9a91c787e0861068ae1a21e5.res"
+path="res://.godot/imported/eyed_chair.ase-76409a3b10d919a4e64c56f4159a7e08.res"
 
 [deps]
 
-source_file="res://art/props/eyed_chair.ase"
-dest_files=["res://.godot/imported/eyed_chair.ase-dab5aaee9a91c787e0861068ae1a21e5.res"]
+source_file="res://art/props/chairs/eyed_chair.ase"
+dest_files=["res://.godot/imported/eyed_chair.ase-76409a3b10d919a4e64c56f4159a7e08.res"]
 
 [params]
 

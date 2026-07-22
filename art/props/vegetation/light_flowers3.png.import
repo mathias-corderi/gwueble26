@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://y6amuhm5xi2"
-path="res://.godot/imported/light_flowers3.png-a1e3949f21e6f49070a86d6513e4d70b.ctex"
+path="res://.godot/imported/light_flowers3.png-a1c9c32db4dbce828782b2fd1990f034.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://art/props/light_flowers3.png"
-dest_files=["res://.godot/imported/light_flowers3.png-a1e3949f21e6f49070a86d6513e4d70b.ctex"]
+source_file="res://art/props/vegetation/light_flowers3.png"
+dest_files=["res://.godot/imported/light_flowers3.png-a1c9c32db4dbce828782b2fd1990f034.ctex"]
 
 [params]
 
