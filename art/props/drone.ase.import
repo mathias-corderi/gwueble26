@@ -1,0 +1,14 @@
+[remap]
+
+importer="aseprite_wizard.plugin.noop"
+type="PackedDataContainer"
+uid="uid://dsmij2m5f4ttd"
+path="res://.godot/imported/drone.ase-79dcef33cc3888410b0106e391fa76d9.res"
+
+[deps]
+
+source_file="res://art/props/drone.ase"
+dest_files=["res://.godot/imported/drone.ase-79dcef33cc3888410b0106e391fa76d9.res"]
+
+[params]
+

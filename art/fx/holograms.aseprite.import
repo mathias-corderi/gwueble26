@@ -1,0 +1,14 @@
+[remap]
+
+importer="aseprite_wizard.plugin.noop"
+type="PackedDataContainer"
+uid="uid://bebxdbk8q7mog"
+path="res://.godot/imported/holograms.aseprite-bb461d2822275ec511b4cd15e0e55529.res"
+
+[deps]
+
+source_file="res://art/fx/holograms.aseprite"
+dest_files=["res://.godot/imported/holograms.aseprite-bb461d2822275ec511b4cd15e0e55529.res"]
+
+[params]
+

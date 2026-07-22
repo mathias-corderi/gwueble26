@@ -1,0 +1,14 @@
+[remap]
+
+importer="aseprite_wizard.plugin.noop"
+type="PackedDataContainer"
+uid="uid://b5l2aashtikpl"
+path="res://.godot/imported/floating_enemy.ase-392e27664d9ca3188694ad1d1f777e8a.res"
+
+[deps]
+
+source_file="res://art/npc/floating_enemy.ase"
+dest_files=["res://.godot/imported/floating_enemy.ase-392e27664d9ca3188694ad1d1f777e8a.res"]
+
+[params]
+
