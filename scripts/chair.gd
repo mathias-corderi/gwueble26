@@ -189,6 +189,7 @@ func try_secondary() -> void:
 	if secondary_uses_left > 0:
 		secondary_uses_left -= 1
 	var power := data.secondary_power
+	## secondary animation? (mech has a slam)
 	match data.secondary_id:
 		&"shockwave":
 			Combat.knockback_enemies(get_tree(), global_position, SHOCKWAVE_RADIUS,

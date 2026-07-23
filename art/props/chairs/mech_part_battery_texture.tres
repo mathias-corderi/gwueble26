@@ -1,0 +1,5 @@
+[gd_resource type="PortableCompressedTexture2D" format=4 uid="uid://s2q1337t8ibs"]
+
+[resource]
+_data = PackedByteArray("AAADAAUAAAABAAAAQAAAAEAAAACcAAAAUklGRpQAAABXRUJQVlA4TIcAAAAvP8APEDdAJmCx/nkEkEAHXoUINTCufx4dvJQwBTQg1MC4iOJ6qyGAFLb5D8Df9WWxjmWKwFEk22oVFIAGbkUAZ01XQFAB+ffAJ/xhEdH/CRD+LWoaKLcKFdQ0ICIiCRHbRMQIh5k5gPjjg7UDaBhQLaodIv9YQ+SjfFQE8+8OTyoHiieEZw0A")
+size_override = Vector2(64, 64)

@@ -12,7 +12,30 @@ collision_mask = 22
 motion_mode = 1
 script = ExtResource("1")
 
-[node name="ChairSprite" type="AnimatedSprite2D" parent="."]
+[node name="ChairSprite" type="AnimatedSprite2D" parent="." unique_id=2071777809]
+texture_filter = 1
+animation = &"sit"
+frame = 1
+frame_progress = 0.86105317
+metadata/_aseprite_wizard_interface_config_ = {
+"layer_section": true,
+"pending_changes": {},
+"slice_section": true
+}
+metadata/_aseprite_wizard_config_ = {
+"embed_tex": true,
+"layers": [],
+"o_ex_p": "",
+"o_folder": "",
+"o_name": "",
+"only_visible": true,
+"scale": "1.0",
+"should_round_fps": true,
+"slice": "",
+"source": "res://art/props/chairs/eyed_chair.ase",
+"source_uid": 9207720294054826583
+}
+metadata/_aseprite_wizard_source_file_hash_ = "c19b6674f7183f9b516136e2f9a2d155"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=841986810]
 position = Vector2(0, -4)

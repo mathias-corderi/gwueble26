@@ -1,20 +1,23 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://xt465g55ckco"]
 
-[ext_resource type="Script" path="res://scripts/mech_station.gd" id="1"]
+[ext_resource type="Script" uid="uid://k3emtwhrr0u3" path="res://scripts/mech_station.gd" id="1_65wa8"]
+[ext_resource type="Texture2D" uid="uid://0mwqe1igmjfo" path="res://art/props/chairs/mech_part_leg_texture.tres" id="2_cfyre"]
+[ext_resource type="Texture2D" uid="uid://s2q1337t8ibs" path="res://art/props/chairs/mech_part_battery_texture.tres" id="3_nshkh"]
+[ext_resource type="Texture2D" uid="uid://bfyu5ibhtw6jg" path="res://art/props/chairs/mech_part_module_texture.tres" id="4_gjx7c"]
 
 [sub_resource type="CircleShape2D" id="station_shape"]
 radius = 90.0
 
-[node name="MechStation" type="Area2D"]
+[node name="MechStation" type="Area2D" unique_id=1374036095]
 z_index = 1
 collision_layer = 0
-collision_mask = 1
-script = ExtResource("1")
+script = ExtResource("1_65wa8")
+build_stage_sprites = Array[Texture2D]([ExtResource("2_cfyre"), ExtResource("3_nshkh"), ExtResource("4_gjx7c")])
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1603708038]
 shape = SubResource("station_shape")
 
-[node name="ProgressLabel" type="Label" parent="."]
+[node name="ProgressLabel" type="Label" parent="." unique_id=1462907141]
 offset_left = -90.0
 offset_top = 96.0
 offset_right = 90.0

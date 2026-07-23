@@ -1,24 +1,48 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://drqtoh0bdk4ad"]
 
-[ext_resource type="Script" path="res://scripts/mech.gd" id="1"]
+[ext_resource type="Script" uid="uid://ltb61ghnpayj" path="res://scripts/mech.gd" id="1"]
+[ext_resource type="SpriteFrames" uid="uid://cjt5qtc32k3yn" path="res://data/chairs/mech_frames.tres" id="2_7iq05"]
 
 [sub_resource type="RectangleShape2D" id="mech_shape"]
 size = Vector2(110, 120)
 
-[node name="Mech" type="CharacterBody2D"]
+[node name="Mech" type="CharacterBody2D" unique_id=1955665452]
 z_index = 2
 collision_layer = 4
 collision_mask = 22
 motion_mode = 1
 script = ExtResource("1")
 
-[node name="ChairSprite" type="AnimatedSprite2D" parent="."]
+[node name="ChairSprite" type="AnimatedSprite2D" parent="." unique_id=1132125383]
+texture_filter = 1
+sprite_frames = ExtResource("2_7iq05")
+animation = &"attack_side"
+frame_progress = 0.05916153
+metadata/_aseprite_wizard_interface_config_ = {
+"layer_section": true,
+"pending_changes": {},
+"slice_section": false
+}
+metadata/_aseprite_wizard_config_ = {
+"embed_tex": true,
+"layers": [],
+"o_ex_p": "",
+"o_folder": "",
+"o_name": "",
+"only_visible": true,
+"scale": "1.0",
+"should_round_fps": true,
+"slice": "",
+"source": "res://art/npc/mech.ase",
+"source_uid": 8961410742231568649
+}
+metadata/_aseprite_wizard_source_file_hash_ = "162d4343d605249d68ab2f40c19fe1a0"
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=783585945]
 position = Vector2(0, -4)
 shape = SubResource("mech_shape")
 
-[node name="NameLabel" type="Label" parent="."]
+[node name="NameLabel" type="Label" parent="." unique_id=2136942934]
 offset_left = -80.0
 offset_top = -110.0
 offset_right = 80.0

@@ -29,7 +29,7 @@ func _current_state() -> String:
 	if shooting:
 		return "shoot"
 	if player.velocity.length() > 5.0:
-		return "walk"
+		return "run"
 	return "idle"
 
 func _anim_candidates(state: String, dir: StringName) -> Array:

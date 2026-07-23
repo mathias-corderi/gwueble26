@@ -1,0 +1,14 @@
+[remap]
+
+importer="aseprite_wizard.plugin.noop"
+type="PackedDataContainer"
+uid="uid://j6fv1v16q4be"
+path="res://.godot/imported/mech_parts.ase-c9d35933fe261f848301996e0046aaa9.res"
+
+[deps]
+
+source_file="res://art/mech_parts.ase"
+dest_files=["res://.godot/imported/mech_parts.ase-c9d35933fe261f848301996e0046aaa9.res"]
+
+[params]
+

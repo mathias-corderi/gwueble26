@@ -1,6 +1,6 @@
-[gd_resource type="Resource" script_class="ChairData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ChairData" format=3 uid="uid://c4mbwmvmkhiqi"]
 
-[ext_resource type="Script" path="res://scripts/chair_data.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://bnqyn4wagiom1" path="res://scripts/chair_data.gd" id="1_script"]
 
 [resource]
 script = ExtResource("1_script")
@@ -13,7 +13,4 @@ move_speed = 220.0
 passive_id = &""
 secondary_id = &"shockwave"
 secondary_cooldown = 3.0
-secondary_uses = -1
 secondary_power = 2.0
-break_effect_id = &""
-break_effect_power = 1.0

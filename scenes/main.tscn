@@ -1,13 +1,13 @@
 [gd_scene format=3 uid="uid://b7v7non61066e"]
 
 [ext_resource type="Script" uid="uid://bkkxe54w57o5b" path="res://scripts/main.gd" id="1"]
-[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://da41lqm4jb62u" path="res://scenes/player.tscn" id="2"]
 [ext_resource type="Script" uid="uid://cixin4yyp130w" path="res://scripts/chair_spawner.gd" id="3"]
 [ext_resource type="Script" uid="uid://ceehoi12d2lp3" path="res://scripts/enemy_spawner.gd" id="4"]
 [ext_resource type="PackedScene" path="res://scenes/hud.tscn" id="5"]
 [ext_resource type="Script" uid="uid://bi3xtwp1gn6y6" path="res://scripts/crosshair.gd" id="6"]
-[ext_resource type="Script" path="res://scripts/weapon_spawner.gd" id="7"]
-[ext_resource type="PackedScene" path="res://scenes/mech_station.tscn" id="8"]
+[ext_resource type="Script" uid="uid://8fmjh6kp6oni" path="res://scripts/weapon_spawner.gd" id="7"]
+[ext_resource type="PackedScene" uid="uid://xt465g55ckco" path="res://scenes/mech_station.tscn" id="8"]
 
 [sub_resource type="RectangleShape2D" id="wall_h"]
 size = Vector2(2440, 40)
@@ -75,7 +75,7 @@ shape = SubResource("wall_v")
 position = Vector2(1200, 0)
 shape = SubResource("wall_v")
 
-[node name="MechStation" parent="." instance=ExtResource("8")]
+[node name="MechStation" parent="." unique_id=629303389 instance=ExtResource("8")]
 
 [node name="Chairs" type="Node2D" parent="." unique_id=112298524]
 
@@ -83,9 +83,10 @@ shape = SubResource("wall_v")
 
 [node name="Projectiles" type="Node2D" parent="." unique_id=1905667582 groups=["projectile_container"]]
 
-[node name="Weapons" type="Node2D" parent="."]
+[node name="Weapons" type="Node2D" parent="." unique_id=790901101]
 
 [node name="Player" parent="." unique_id=1113905610 instance=ExtResource("2")]
+scale = Vector2(3, 3)
 
 [node name="ChairSpawner" type="Node" parent="." unique_id=491317749 node_paths=PackedStringArray("container")]
 script = ExtResource("3")
@@ -95,7 +96,7 @@ container = NodePath("../Chairs")
 script = ExtResource("4")
 container = NodePath("../Enemies")
 
-[node name="WeaponSpawner" type="Node" parent="." node_paths=PackedStringArray("container")]
+[node name="WeaponSpawner" type="Node" parent="." unique_id=1822121767 node_paths=PackedStringArray("container")]
 script = ExtResource("7")
 container = NodePath("../Weapons")
 
