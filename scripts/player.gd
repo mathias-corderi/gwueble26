@@ -302,7 +302,7 @@ func _channel_beam(delta: float) -> void:
 
 func _sync_beam_count(count: int, weapon_data: WeaponData) -> void:
 	while _active_beams.size() > count:
-		_active_beams.pop_back().queue_free()
+		_active_beams.pop_back().begin_fade_out() # shrink out instead of popping
 	var container := get_tree().get_first_node_in_group("projectile_container")
 	while _active_beams.size() < count:
 		var beam: LaserBeam = LASER_BEAM_SCENE.instantiate()
@@ -314,7 +314,7 @@ func _clear_beams() -> void:
 	if _active_beams.is_empty():
 		return
 	for beam in _active_beams:
-		beam.queue_free()
+		beam.begin_fade_out() # thins to a hairline, then frees itself
 	_active_beams.clear()
 
 func _spend_ammo(weapon: Dictionary) -> void:

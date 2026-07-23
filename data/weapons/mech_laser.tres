@@ -1,23 +1,20 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://pyqvfep2136h"]
 
-[ext_resource type="Script" path="res://scripts/weapon_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://art/fx/laser_beam.png" id="2_beam"]
+[ext_resource type="Script" uid="uid://h1axl2dxeykx" path="res://scripts/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://batf8gyh5hb1f" path="res://art/fx/laser_beam.png" id="2_beam"]
 
 [resource]
 script = ExtResource("1_script")
 display_name = "Mech Laser"
-color = Color(0.5, 0.85, 1, 1)
+color = Color(0, 0.65363336, 0.78027254, 1)
 handedness = 1
 max_ammo = -1
-reload_interval = 0.0
 energy_seconds = 10.0
 energy_recharge_time = 30.0
 spawns_on_map = false
 attack_type = 1
 fire_rate = 10.0
 damage = 6.0
-projectile_count = 1
-spread_degrees = 0.0
 projectile_radius = 7.0
 projectile_color = Color(0.5, 0.85, 1, 1)
 projectile_sprite = ExtResource("2_beam")

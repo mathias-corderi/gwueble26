@@ -15,7 +15,7 @@ var velocity := Vector2.ZERO
 func configure(data: EnemyData, direction: Vector2) -> void:
 	damage = data.shot_damage
 	radius = data.shot_radius
-	color = data.color.lerp(Color.WHITE, 0.35)
+	color = data.shot_color if data.shot_color.a > 0.0 else data.color.lerp(Color.WHITE, 0.35)
 	sprite = data.shot_sprite
 	velocity = direction * data.shot_speed
 
@@ -24,6 +24,10 @@ func _ready() -> void:
 	var shape := CircleShape2D.new()
 	shape.radius = radius
 	$CollisionShape2D.shape = shape
+	# Additive blend fakes an intense glow under the GL Compatibility renderer.
+	var mat := CanvasItemMaterial.new()
+	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	material = mat
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
@@ -41,8 +45,12 @@ func _on_body_entered(body: Node) -> void:
 		queue_free()
 
 func _draw() -> void:
+	# Soft additive halo behind the shot for the glow read.
+	var glow := Color(color.r, color.g, color.b, 0.16)
+	draw_circle(Vector2.ZERO, radius * 2.3, glow)
+	draw_circle(Vector2.ZERO, radius * 1.6, glow)
 	if sprite:
-		SpriteFit.draw(self, sprite, Vector2.ONE * radius * 2.2)
+		SpriteFit.draw(self, sprite, Vector2.ONE * radius * 2.2, color)
 		return
 	draw_circle(Vector2.ZERO, radius, color)
 	draw_arc(Vector2.ZERO, radius, 0.0, TAU, 24, color.lightened(0.5), 2.0)

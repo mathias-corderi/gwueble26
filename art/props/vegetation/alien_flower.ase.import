@@ -1,0 +1,14 @@
+[remap]
+
+importer="aseprite_wizard.plugin.noop"
+type="PackedDataContainer"
+uid="uid://c708xpw2u3koj"
+path="res://.godot/imported/alien_flower.ase-68bec560d7485db17cea1cfe65001751.res"
+
+[deps]
+
+source_file="res://art/props/vegetation/alien_flower.ase"
+dest_files=["res://.godot/imported/alien_flower.ase-68bec560d7485db17cea1cfe65001751.res"]
+
+[params]
+

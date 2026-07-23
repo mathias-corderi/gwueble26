@@ -20,7 +20,7 @@ const STEPS_PER_SEGMENT := 6
 const JITTER_RATIO := 0.12
 const MAX_JITTER := 26.0
 const CORE_WIDTH := 3.0
-const GLOW_WIDTH := 9.0
+const GLOW_WIDTH := 14.0
 
 ## Cached across every bolt: null until the artist drops the file in.
 static var _texture: Texture2D
@@ -59,10 +59,15 @@ func _ready() -> void:
 		if texture:
 			line.texture = texture
 			line.texture_mode = Line2D.LINE_TEXTURE_TILE
+	# Additive blend on the glow builds up an intense halo (no bloom under GL
+	# Compatibility), and the core is pushed toward white so it reads as hot.
+	var glow_mat := CanvasItemMaterial.new()
+	glow_mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	_glow.material = glow_mat
 	_glow.width = GLOW_WIDTH
-	_glow.default_color = Color(color.r, color.g, color.b, 0.3)
+	_glow.default_color = Color(color.r, color.g, color.b, 0.5)
 	_core.width = CORE_WIDTH
-	_core.default_color = color.lerp(Color.WHITE, 0.5)
+	_core.default_color = color.lerp(Color.WHITE, 0.65)
 	_rebuild()
 
 func _process(delta: float) -> void:

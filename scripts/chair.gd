@@ -65,7 +65,7 @@ const MISSILE_COUNT := 10
 const MISSILE_DAMAGE := 16.0
 ## charge_laser (Atomic): 1 s wind-up, then a giant self-driving beam.
 const CHARGE_LASER_TIME := 1.0
-const CHARGE_LASER_DURATION := 0.6
+const CHARGE_LASER_DURATION := 2
 const CHARGE_LASER_DAMAGE := 22.0
 const CHARGE_LASER_WIDTH := 22.0
 ## spear (Spiked): a wide short lunge.
@@ -264,7 +264,7 @@ func _fire_charge_laser() -> void:
 	beam.texture = LASER_TEXTURE
 	beam.global_position = global_position
 	_projectile_container().add_child(beam)
-	beam.start_burst(_aim_direction(), CHARGE_LASER_DURATION, {})
+	beam.start_burst(_aim_direction(), CHARGE_LASER_DURATION, {}, self)
 
 func _spawn_spear(direction: Vector2, power := 1.0) -> void:
 	var spear: SpearAttack = SPEAR_SCENE.instantiate()

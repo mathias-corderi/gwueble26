@@ -1,6 +1,8 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="WeaponData" load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://fl188jssu87w" path="res://art/weapons/shotgun.png" id="2_sprite"]
+[ext_resource type="Texture2D" uid="uid://c52u3hbxukejm" path="res://art/fx/shell.png" id="3_shell"]
 
 [resource]
 script = ExtResource("1_script")
@@ -13,6 +15,9 @@ damage = 7.5
 projectile_count = 6
 spread_degrees = 20.0
 projectile_speed = 700.0
-projectile_radius = 4.0
-projectile_color = Color(1, 0.82, 0.55, 1)
+projectile_radius = 6.0
+projectile_color = Color(1, 0.9, 0.15, 1)
 projectile_lifetime = 0.5
+projectile_trail_pieces = 3
+sprite = ExtResource("2_sprite")
+projectile_sprite = ExtResource("3_shell")

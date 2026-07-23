@@ -1,30 +1,39 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://bs71t2epdi0dr"]
 
-[ext_resource type="Script" path="res://scripts/ui/passive_bar.gd" id="1"]
+[ext_resource type="Script" uid="uid://8wcf1ywlk5cs" path="res://scripts/ui/passive_bar.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://b33i67mn6wf4d" path="res://art/ui/passive_bar_wood.png" id="2_wood"]
+[ext_resource type="Texture2D" uid="uid://bgbdyf7w3fghy" path="res://art/ui/passive_bar_charred.png" id="3_charred"]
+[ext_resource type="SpriteFrames" uid="uid://cvxqfmhirf4tw" path="res://art/ui/passive_flame_frames.tres" id="4_flame"]
 
-[node name="PassiveBar" type="Control"]
+[node name="PassiveBar" type="Control" unique_id=1822478429]
 custom_minimum_size = Vector2(210, 34)
+layout_mode = 3
+anchors_preset = 0
 script = ExtResource("1")
+wood_texture = ExtResource("2_wood")
+charred_texture = ExtResource("3_charred")
 
-[node name="NameLabel" type="Label" parent="."]
+[node name="NameLabel" type="Label" parent="." unique_id=290304069]
+layout_mode = 0
 offset_right = 210.0
 offset_bottom = 14.0
 theme_override_font_sizes/font_size = 11
 text = "Passive"
 
-[node name="Bar" type="ProgressBar" parent="."]
+[node name="Bar" type="Control" parent="." unique_id=1269062311]
+anchors_preset = 0
 offset_top = 20.0
 offset_right = 190.0
 offset_bottom = 28.0
-max_value = 100.0
-value = 100.0
-show_percentage = false
 
-[node name="FlameAnchor" type="Control" parent="."]
+[node name="FlameAnchor" type="Control" parent="." unique_id=2010064972]
+anchors_preset = 0
+offset_transform_enabled = true
+offset_transform_position = Vector2(0, 3)
 
-[node name="FlamePlaceholder" type="ColorRect" parent="FlameAnchor"]
-offset_left = -3.0
-offset_top = -7.0
-offset_right = 3.0
-offset_bottom = 1.0
-color = Color(1, 0.6, 0.1, 1)
+[node name="Flame" type="AnimatedSprite2D" parent="FlameAnchor" unique_id=1609633605]
+texture_filter = 1
+sprite_frames = ExtResource("4_flame")
+animation = &"burn"
+autoplay = "burn"
+offset = Vector2(0, -6)

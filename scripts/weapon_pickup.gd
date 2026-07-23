@@ -5,6 +5,8 @@ extends Area2D
 
 var data: WeaponData
 
+var _time := 0.0
+
 @onready var name_label: Label = $NameLabel
 
 ## Must be called before the pickup is added to the tree.
@@ -21,9 +23,19 @@ func _on_body_entered(body: Node) -> void:
 	if body is Player and body.try_pickup(data):
 		queue_free()
 
+func _process(delta: float) -> void:
+	_time += delta
+	queue_redraw()
+
 func _draw() -> void:
+	# Pulsing highlight halo so weapon pickups stand out on the map.
+	var pulse := 0.5 + 0.5 * sin(_time * 4.0)
+	var glow := Color(data.color.r, data.color.g, data.color.b, 0.10 + 0.12 * pulse)
+	var base_r := 20.0 + 3.0 * pulse
+	draw_circle(Vector2.ZERO, base_r, glow)
+	draw_circle(Vector2.ZERO, base_r * 0.7, glow)
 	if data.sprite:
-		SpriteFit.draw(self, data.sprite, Vector2(28, 28))
+		SpriteFit.draw(self, data.sprite, Vector2(28, 28), Color(1.2, 1.2, 1.2))
 	else:
 		var points := PackedVector2Array([
 			Vector2(0, -14), Vector2(14, 0), Vector2(0, 14), Vector2(-14, 0)
