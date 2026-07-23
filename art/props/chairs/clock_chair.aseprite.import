@@ -1,0 +1,14 @@
+[remap]
+
+importer="aseprite_wizard.plugin.noop"
+type="PackedDataContainer"
+uid="uid://dyn4a435ukgqm"
+path="res://.godot/imported/clock_chair.aseprite-c1a56855e1d7332bde0885d36bd47612.res"
+
+[deps]
+
+source_file="res://art/props/chairs/clock_chair.aseprite"
+dest_files=["res://.godot/imported/clock_chair.aseprite-c1a56855e1d7332bde0885d36bd47612.res"]
+
+[params]
+

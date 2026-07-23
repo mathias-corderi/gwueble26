@@ -1,10 +1,13 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://c7nvrhhdfkkty"]
 
-[ext_resource type="Script" path="res://scripts/laser_beam.gd" id="1"]
+[ext_resource type="Script" uid="uid://700me4ete7dx" path="res://scripts/laser_beam.gd" id="1"]
 
-[node name="LaserBeam" type="Node2D"]
+[node name="LaserBeam" type="Node2D" unique_id=68662383]
 z_index = 5
 script = ExtResource("1")
 
-[node name="Line2D" type="Line2D" parent="."]
+[node name="Glow" type="Line2D" parent="." unique_id=1580566468]
+joint_mode = 2
+
+[node name="Line2D" type="Line2D" parent="." unique_id=258684116]
 joint_mode = 2

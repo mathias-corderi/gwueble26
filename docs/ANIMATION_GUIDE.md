@@ -55,9 +55,14 @@ Use the **same names as the body states** (`idle_<dir>`, `walk_<dir>`, `shoot_<d
 
 So: draw the `up` weapon frames knowing they'll sit behind the body, and draw the chair's `up` frames with a full backrest since it will cover the player.
 
-## The passive flame slot
+## The passive bar (burning wood)
 
-Burning passives show as bars in the HUD (`scenes/ui/passive_bar.tscn`). The `FlameAnchor` node is repositioned by code to the exact burn edge of the bar every frame. To add the flame art: open that scene, delete the `FlamePlaceholder` ColorRect, and add your flame `AnimatedSprite2D` as a child of `FlameAnchor` (centered on it, tip pointing up). Nothing else to touch.
+Burning passives show as bars in the HUD (`scenes/ui/passive_bar.tscn`) styled as a wood stick that burns down as the timer drains. Three pieces of art, all optional and independent — ship whichever is ready first:
+
+- **Wood plank** (the remaining, unburnt fill) and **charred remains** (revealed behind it as it burns): static PNGs. Open `scenes/ui/passive_bar.tscn`, select the `Bar` node, and assign them in the inspector under **Texture Progress** → `Progress Texture` (wood) and `Under Texture` (charred) — or set `wood_texture` / `charred_texture` on the `PassiveBar` script from the same inspector, either works. Any resolution; it stretches to the bar's ~190×8 px rect, so an art aspect close to that reads cleanest (a tileable strip works too — enable `Nine Patch Stretch` + stretch margins on the same node if you want the grain to repeat instead of stretch). Until assigned, both fall back to their current flat placeholder colors.
+- **Flame** (animated): the `FlameAnchor` node is repositioned by code to the exact burn edge of the bar every frame. Delete the `FlamePlaceholder` ColorRect and add your flame `AnimatedSprite2D` as a child of `FlameAnchor` (centered on it, tip pointing up), with `Autoplay on Load` set to your looping animation. Nothing else to touch — no direction/state naming needed here, it's a single non-directional loop, unlike the 8-direction sets above.
+
+**Authoring the flame in Aseprite**: draw the loop as one multi-frame `.aseprite`/`.ase` file (the project already has the AsepriteWizard addon enabled for this) and drop it anywhere under `art/` — e.g. `art/ui/passive_flame.aseprite`. In the Godot editor, select the `AnimatedSprite2D` you added under `FlameAnchor`; the Aseprite Wizard dock appears in its inspector. Drag the `.aseprite` file into its **Source** field and click **Create Frames** — it generates a `SpriteFrames` resource wired to that node automatically (one Godot animation per Aseprite tag, or a single one if you didn't tag it). This is an editor-only step — there's no code to write.
 
 ## Walkthrough: adding a weapon
 

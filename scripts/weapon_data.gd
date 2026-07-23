@@ -43,6 +43,10 @@ enum AttackType { PROJECTILE, BEAM }
 ## Seconds a bullet lives before despawning — short values make short-range
 ## weapons like the Shotgun. PROJECTILE only.
 @export var projectile_lifetime: float = 2.5
+## > 0 renders the bullet as a lagging chain of this many pieces (a trailing
+## streak) instead of a single sprite; the head keeps projectile_color and the
+## pieces behind it darken. Used by the Shotgun pellet. PROJECTILE only.
+@export var projectile_trail_pieces: int = 0
 
 @export_group("Presentation")
 ## Pickup + held placeholder sprite (optional).

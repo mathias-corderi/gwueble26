@@ -27,6 +27,9 @@ extends Resource
 @export var shot_damage: float = 8.0
 ## Optional projectile sprite; falls back to a colored circle.
 @export var shot_sprite: Texture2D
+## Tint for the shot sprite/circle and its glow. Alpha 0 (the default) means
+## "derive from the enemy's base color"; set it to give shots their own color.
+@export var shot_color: Color = Color(0, 0, 0, 0)
 
 @export_group("Presentation")
 ## Optional sprite; falls back to a colored placeholder circle when unset.

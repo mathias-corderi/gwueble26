@@ -23,6 +23,13 @@ const SPLIT_RADIUS_FACTOR := 0.6
 ## Knockback passive: constant shove on every bullet hit.
 const KNOCKBACK_FORCE := 280.0
 const KNOCKBACK_STUN := 0.2
+## Trailing-streak render (Shotgun pellet): the chain stretches with speed but is
+## clamped, so the pieces only ever separate a little. Each piece behind the head
+## is darkened by TRAIL_DARKEN^i.
+const TRAIL_LAG := 0.02
+const TRAIL_GAP_MIN := 8.0
+const TRAIL_GAP_MAX := 22.0
+const TRAIL_DARKEN := 0.6
 ## Poison passive: fraction of max HP per second, +5% per extra level.
 const POISON_PCT_BASE := 0.10
 const POISON_PCT_PER_LEVEL := 0.05
@@ -39,6 +46,8 @@ var damage := 10.0
 var radius := 6.0
 var color := Color.WHITE
 var sprite: Texture2D
+## > 1 renders a lagging trail of this many sprite copies (see WeaponData).
+var trail_pieces := 0
 var homing := false
 var burn_level := 0
 var poison_level := 0
@@ -73,6 +82,7 @@ func configure(weapon: WeaponData, direction: Vector2, passive_levels: Dictionar
 	radius = weapon.projectile_radius
 	color = weapon.projectile_color
 	sprite = weapon.projectile_sprite
+	trail_pieces = weapon.projectile_trail_pieces
 	velocity = direction * weapon.projectile_speed
 	lifetime = weapon.projectile_lifetime
 	homing = int(passive_levels.get(&"homing", 0)) > 0
@@ -120,10 +130,29 @@ func _physics_process(delta: float) -> void:
 	rotation = velocity.angle()
 
 func _draw() -> void:
-	if sprite:
-		SpriteFit.draw(self, sprite, Vector2.ONE * radius * 2.5)
-	else:
+	if sprite == null:
 		draw_circle(Vector2.ZERO, radius, color)
+	elif trail_pieces > 1:
+		_draw_trail()
+	else:
+		SpriteFit.draw(self, sprite, Vector2.ONE * radius * 2.5, color)
+
+## Draws the lagging pellet chain: bright head at the origin, darker copies
+## trailing behind along the travel axis (the node is rotated to velocity).
+func _draw_trail() -> void:
+	var box := Vector2.ONE * radius * 2.5
+	var gap := clampf(velocity.length() * TRAIL_LAG, TRAIL_GAP_MIN, TRAIL_GAP_MAX)
+	for i in range(trail_pieces - 1, -1, -1): # back-to-front so the head sits on top
+		var f := pow(TRAIL_DARKEN, i)
+		var tint := Color(color.r * f, color.g * f, color.b * f, color.a)
+		_draw_sprite_fit(box, Vector2(-gap * i, 0.0), tint)
+
+## SpriteFit.draw, but centered on `offset` instead of the node origin.
+func _draw_sprite_fit(box_size: Vector2, offset: Vector2, tint: Color) -> void:
+	var tex_size := sprite.get_size()
+	var scale := minf(box_size.x / tex_size.x, box_size.y / tex_size.y)
+	var draw_size := tex_size * scale
+	draw_texture_rect(sprite, Rect2(offset - draw_size * 0.5, draw_size), false, tint)
 
 func _on_body_entered(body: Node) -> void:
 	if body is Enemy:
@@ -133,6 +162,7 @@ func _on_body_entered(body: Node) -> void:
 
 func _hit_enemy(enemy: Enemy) -> void:
 	enemy.take_damage(damage)
+	ImpactBurst.spawn(get_tree().current_scene, global_position, color)
 	if poison_level > 0:
 		enemy.apply_poison(POISON_PCT_BASE + POISON_PCT_PER_LEVEL * (poison_level - 1), POISON_DURATION)
 	if burn_level > 0:

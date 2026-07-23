@@ -1,4 +1,4 @@
-[gd_scene format=4 uid="uid://da41lqm4jb62u"]
+[gd_scene format=4 uid="uid://dw120e5vbip6s"]
 
 [ext_resource type="Script" uid="uid://c2lwdlipgrmgm" path="res://scripts/player.gd" id="1"]
 [ext_resource type="Script" uid="uid://fd8hkn5gamom" path="res://scripts/player_animator.gd" id="2"]
@@ -822,7 +822,6 @@ collision_mask = 4
 shape = SubResource("interact_shape")
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1120449350]
-position_smoothing_enabled = true
 position_smoothing_speed = 8.0
 
 [node name="Animator" type="Node" parent="." unique_id=1336793185]

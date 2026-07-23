@@ -1,19 +1,19 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=3 format=3]
+[gd_resource type="Resource" script_class="WeaponData" format=3 uid="uid://b48j38h2wd5x3"]
 
-[ext_resource type="Script" path="res://scripts/weapon_data.gd" id="1_script"]
-[ext_resource type="Texture2D" path="res://art/fx/laser_beam.png" id="2_beam"]
+[ext_resource type="Script" uid="uid://h1axl2dxeykx" path="res://scripts/weapon_data.gd" id="1_script"]
+[ext_resource type="Texture2D" uid="uid://batf8gyh5hb1f" path="res://art/fx/laser_beam.png" id="2_beam"]
+[ext_resource type="Texture2D" uid="uid://b2nuyffogfsha" path="res://art/weapons/laser_gun.png" id="3_sprite"]
 
 [resource]
 script = ExtResource("1_script")
 display_name = "Laser Gun"
-color = Color(1, 0.35, 0.4, 1)
+color = Color(0.7202103, 0, 0, 1)
 handedness = 1
 max_ammo = 270
 attack_type = 1
 fire_rate = 10.0
 damage = 4.0
-projectile_count = 1
-spread_degrees = 0.0
 projectile_radius = 5.0
 projectile_color = Color(1, 0.35, 0.4, 1)
+sprite = ExtResource("3_sprite")
 projectile_sprite = ExtResource("2_beam")
