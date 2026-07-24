@@ -23,7 +23,7 @@ Everything is placeholder art (colored shapes) — this build exists to test the
 ## How to add a new chair
 
 1. Duplicate any `.tres` in `data/chairs/` (e.g. `plastic_chair.tres`).
-2. Edit its stats in the Godot inspector: name, color, HP, meter time, `move_speed` (mounts), `passive_id`, the optional secondary attack, and music.
+2. Edit its stats in the Godot inspector: name, color, HP, meter time, `move_speed` (mounts), `passive_id`, the optional secondary attack, and its sit sound.
 3. Done — the chair spawner scans `data/chairs/` at startup, no code changes needed.
 
 Available passives (`passive_id`): `triple_shot`, `homing`, `burn`, `explosive`, `pierce` — defined in `RunState.PASSIVES` with their burn duration and max level. Passives are temporary **burning bars** that decay; refreshing one with another chair of the same type levels it up. Active passives apply to every weapon's shots automatically, which is where the synergies come from.
@@ -34,10 +34,10 @@ Same idea: duplicate a `.tres` in `data/enemies/` or `data/weapons/` and tweak i
 
 ## Project layout
 
-- `scenes/` — one scene per entity (`main`, `player`, `chair`, `enemy`, `projectile`, `weapon_pickup`, `hud`, `ui/passive_bar`)
+- `scenes/` — one scene per entity (`main`, `player`, `chair`, `enemy`, `projectile`, `weapon_pickup`, `hud`, `ui/passive_bar`, `ui/pause_menu`)
 - `scripts/` — their scripts, plus the data resource definitions (`chair_data.gd`, `enemy_data.gd`, `weapon_data.gd`)
-- `scripts/autoload/` — `RunState` (run timer, kills, burning passives) and `MusicManager` (per-chair music crossfade)
+- `scripts/autoload/` — `RunState` (run timer, kills, burning passives), `MusicManager` (level & mech music + one-shot chair sounds) and `SettingsManager` (audio/video options, saved to `user://settings.cfg`)
 - `data/` — drop-in chair, enemy and weapon definitions
-- `audio/` — generated placeholder music loops (one per chair)
+- `audio/` — placeholder audio (silent): `music/` level & mech themes (loop), `chairs/` one-shot sit sounds (one per chair)
 - `docs/` — [ANIMATION_GUIDE.md](docs/ANIMATION_GUIDE.md): the 8-direction art/animation spec
 - `test/` — headless integration test; run it with `godot --headless --path . res://test/smoke_test.tscn` (exit code 0 = all checks pass)

@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="ChairData" format=3 uid="uid://c4mbwmvmkhiqi"]
 
 [ext_resource type="Script" uid="uid://bnqyn4wagiom1" path="res://scripts/chair_data.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://audio/chairs/mech.wav" id="2_sound"]
 
 [resource]
 script = ExtResource("1_script")
@@ -14,3 +15,4 @@ passive_id = &""
 secondary_id = &"shockwave"
 secondary_cooldown = 3.0
 secondary_power = 2.0
+sit_sound = ExtResource("2_sound")

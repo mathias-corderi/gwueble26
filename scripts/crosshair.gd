@@ -9,6 +9,7 @@ var _color := STANDING_COLOR
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	z_index = 100
+	add_to_group("crosshair") # so the pause menu can hide it while open
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	var player: Player = get_tree().get_first_node_in_group("player")
 	player.seated_on.connect(_on_seated)

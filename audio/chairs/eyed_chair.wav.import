@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://cr4ci25xs7kuc"
-path="res://.godot/imported/toilet.wav-cbcbb3b0e1ff870fcd729e21f6c0f5b3.sample"
+uid="uid://cucv7j3b62g5t"
+path="res://.godot/imported/eyed_chair.wav-00a9affb52135128fdea814ab7ebe284.sample"
 
 [deps]
 
-source_file="res://audio/toilet.wav"
-dest_files=["res://.godot/imported/toilet.wav-cbcbb3b0e1ff870fcd729e21f6c0f5b3.sample"]
+source_file="res://audio/chairs/eyed_chair.wav"
+dest_files=["res://.godot/imported/eyed_chair.wav-00a9affb52135128fdea814ab7ebe284.sample"]
 
 [params]
 

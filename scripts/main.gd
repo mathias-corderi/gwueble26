@@ -4,6 +4,9 @@ extends Node2D
 func _ready() -> void:
 	_setup_glow_environment()
 	RunState.reset()
+	MusicManager.play_level_music()
+	# Built here (like the environment) so main.tscn and sandbox.tscn share it.
+	add_child(preload("res://scenes/ui/pause_menu.tscn").instantiate())
 	($Player as Player).died.connect(_on_player_died)
 
 ## Adds a WorldEnvironment with additive HDR glow so laser beams (whose colors
@@ -26,6 +29,9 @@ func _setup_glow_environment() -> void:
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
 	add_child(world_env)
+	# Let SettingsManager reach this code-built environment (brightness/HDR).
+	world_env.add_to_group(SettingsManager.ENV_GROUP)
+	SettingsManager.apply_environment()
 
 func _on_player_died() -> void:
 	RunState.game_over = true

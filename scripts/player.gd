@@ -142,7 +142,7 @@ func on_chair_broken() -> void:
 	current_chair = null
 	RunState.pinned_passives.clear()
 	stood_up.emit()
-	MusicManager.stop_music()
+	# The level music keeps playing after standing up; only game over stops it.
 
 ## Turned off while piloting the Mech, whose body takes the hits instead.
 func set_hitbox_enabled(enabled: bool) -> void:
@@ -222,7 +222,11 @@ func _sit(chair: Chair) -> void:
 	velocity = Vector2.ZERO
 	_set_nearby_chair(null)
 	seated_on.emit(chair)
-	MusicManager.play_track(chair.data.music)
+	# Every chair plays its one-shot sit sound over the level music; the Mech
+	# additionally swaps the level music for its own theme.
+	MusicManager.play_chair_sound(chair.data.sit_sound)
+	if chair is Mech:
+		MusicManager.play_mech_music()
 
 func _fire() -> void:
 	var weapon := current_weapon()

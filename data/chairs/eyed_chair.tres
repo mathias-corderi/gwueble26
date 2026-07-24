@@ -2,6 +2,7 @@
 
 [ext_resource type="SpriteFrames" uid="uid://bahkns66wky37" path="res://data/chairs/eyed_chair_frames.tres" id="1_lbo7c"]
 [ext_resource type="Script" uid="uid://bnqyn4wagiom1" path="res://scripts/chair_data.gd" id="1_script"]
+[ext_resource type="AudioStream" path="res://audio/chairs/eyed_chair.wav" id="2_sound"]
 
 [resource]
 script = ExtResource("1_script")
@@ -14,3 +15,4 @@ secondary_id = &"eye_burst"
 secondary_cooldown = 3.0
 secondary_uses = 3
 chair_frames = ExtResource("1_lbo7c")
+sit_sound = ExtResource("2_sound")

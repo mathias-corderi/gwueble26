@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://84s4hycut3oh"
-path="res://.godot/imported/musical_chair.wav-c54f61140b230d8728a2274d90fb7bc3.sample"
+uid="uid://coq8skwchtj25"
+path="res://.godot/imported/wheelchair.wav-153a28d6adcc44d59cceb6d50ce2ea66.sample"
 
 [deps]
 
-source_file="res://audio/musical_chair.wav"
-dest_files=["res://.godot/imported/musical_chair.wav-c54f61140b230d8728a2274d90fb7bc3.sample"]
+source_file="res://audio/chairs/wheelchair.wav"
+dest_files=["res://.godot/imported/wheelchair.wav-153a28d6adcc44d59cceb6d50ce2ea66.sample"]
 
 [params]
 

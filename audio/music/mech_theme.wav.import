@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://uk36jp33hay"
-path="res://.godot/imported/throne.wav-150b104a39ef460672fc66b9e3080ff1.sample"
+uid="uid://bxvrgd8mrsef"
+path="res://.godot/imported/mech_theme.wav-37bdca782257103482e1081e1ff57ed7.sample"
 
 [deps]
 
-source_file="res://audio/throne.wav"
-dest_files=["res://.godot/imported/throne.wav-150b104a39ef460672fc66b9e3080ff1.sample"]
+source_file="res://audio/music/mech_theme.wav"
+dest_files=["res://.godot/imported/mech_theme.wav-37bdca782257103482e1081e1ff57ed7.sample"]
 
 [params]
 

@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ChairData" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/chair_data.gd" id="1_script"]
-[ext_resource type="AudioStream" path="res://audio/musical_chair.wav" id="2_music"]
+[ext_resource type="AudioStream" path="res://audio/chairs/musical_chair.wav" id="2_music"]
 
 [resource]
 script = ExtResource("1_script")
@@ -15,4 +15,4 @@ secondary_id = &"musical_wave"
 secondary_cooldown = 5.0
 secondary_uses = -1
 secondary_power = 1.0
-music = ExtResource("2_music")
+sit_sound = ExtResource("2_music")

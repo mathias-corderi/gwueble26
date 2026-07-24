@@ -2,13 +2,13 @@
 
 importer="wav"
 type="AudioStreamWAV"
-uid="uid://cxsvy4kmm8ihg"
-path="res://.godot/imported/gamer_chair.wav-f7d331c1382781a55332b3328aecd96f.sample"
+uid="uid://ccwf43b2b830g"
+path="res://.godot/imported/throne.wav-b3bbaec7558e85a0ed5c3266fb7e88bd.sample"
 
 [deps]
 
-source_file="res://audio/gamer_chair.wav"
-dest_files=["res://.godot/imported/gamer_chair.wav-f7d331c1382781a55332b3328aecd96f.sample"]
+source_file="res://audio/chairs/throne.wav"
+dest_files=["res://.godot/imported/throne.wav-b3bbaec7558e85a0ed5c3266fb7e88bd.sample"]
 
 [params]
 

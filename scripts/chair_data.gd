@@ -37,7 +37,11 @@ extends Resource
 @export var break_effect_power: float = 1.0
 
 @export_group("Presentation")
-@export var music: AudioStream
+## One-shot sound played once when the player sits on this chair; it does not
+## loop and plays over the level music. The Mech additionally swaps the level
+## music (see player._sit). Placeholder .wav per chair in res://audio/chairs/ —
+## replace the file to give the chair its sound.
+@export var sit_sound: AudioStream
 ## Static sprite fallback used when chair_frames is not set (optional).
 @export var sprite: Texture2D
 ## 8-direction animation set (idle_<dir>, optional move_<dir> for mounts);

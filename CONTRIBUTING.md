@@ -16,14 +16,14 @@ git checkout -b my-feature
 git push -u origin my-feature
 ```
 
-## Adding / replacing MUSIC 🎵
+## Adding / replacing MUSIC & CHAIR SOUNDS 🎵
 
-Each chair has its own theme that plays while you sit on it (the game crossfades automatically; any track loops by itself, no need to author a seamless loop).
+Audio has two layers, both **drop-in** — overwrite a placeholder file, keep its name, done. Every placeholder ships **silent**, so anything unrecorded is simply inaudible; deliver them one at a time.
 
-- **Replace a placeholder**: overwrite the matching file in `audio/` keeping the same filename (e.g. `audio/throne.wav`). Done — nothing else to touch.
-- **Add a new track**: drop your file anywhere in `audio/` (`.ogg` recommended, `.wav`/`.mp3` also fine), then open the chair's `.tres` in `data/chairs/`, and drag your file into the **Music** field in the inspector.
+- **Background music** (loops) lives in `audio/music/`: `level_theme.wav` starts with the run, and `mech_theme.wav` takes over when the player boards the Mech. Overwrite either file to set that track. Routed through the **Music** bus (volume in ⏸ Options → Audio).
+- **Per-chair sit sound** (one-shot) lives in `audio/chairs/<chair>.wav`, one per chair. It fires the moment you sit — it does **not** loop and plays *over* the level music. Overwrite the matching file to give that chair its sound. Routed through the **SFX** bus. The Mech is special: boarding it plays its `audio/chairs/mech.wav` one-shot **and** swaps the level music for the mech theme.
 
-There is no global/standing music yet — if you compose one, ping the team and we'll wire it into `MusicManager`.
+`.wav` is used for the placeholders; `.ogg`/`.mp3` work too — drop the file and repoint the chair's **Sit Sound** field (in `data/chairs/*.tres`) or the `LEVEL_MUSIC` / `MECH_MUSIC` preload in `scripts/autoload/music_manager.gd`. All the wiring lives in that autoload; per-chair sounds come from the chair's `sit_sound` field.
 
 ## Adding ART 🎨
 
@@ -50,7 +50,7 @@ Keep in mind enemies flash white when hit and orange while burning, and chairs b
 | `passive_id` | One of the ids in `RunState.PASSIVES` — see the list below |
 | `secondary_id` + `secondary_cooldown` / `secondary_uses` / `secondary_power` | Optional right-click ability while seated. Empty id = none. `secondary_uses = -1` means unlimited (cooldown only). Implemented: `shockwave`, `musical_wave` (push + slow), `eye_burst` (8 big bullets mimicking your weapon), `dash` (charge forward, invulnerable, damaging contacts), `missiles` (10 homing missiles), `charge_laser` (1 s wind-up, then a giant beam), `spear` (wide short lunge) |
 | `break_effect_id` + `break_effect_power` | Optional blast fired whenever the chair breaks — from enemy damage, burnout, *or* standing up voluntarily, so popping your own chair is a tactic. Empty id = none (every break already knocks enemies back). Implemented: `electric_burst`, `shatter` (damaging seat fragments), `blast` (wide damaging shove), `spear_burst` (spears in the 4 cardinal directions). `break_effect_power` scales radius and damage |
-| `music`, `sprite`, `chair_frames` | Presentation (all optional; `chair_frames` is the 8-direction set, see the animation guide) |
+| `sit_sound`, `sprite`, `chair_frames` | Presentation (all optional; `sit_sound` is the one-shot played when you sit, see the music section; `chair_frames` is the 8-direction set, see the animation guide) |
 
 **How passives work now (burning bars)**: filling a chair's meter grants its passive with a decaying timer — when the bar burns out, the passive is lost. Filling another chair of the same type resets the timer and levels the passive up (up to its `max_level` in `RunState.PASSIVES`; e.g. Triple Shot stacks to Lv3, Homing doesn't level). Sitting on a chair whose passive you already own keeps that passive's bar **pinned at full** while you stay seated — it only starts burning down again when you stand up. Balance intuition: strong passive or secondary → compensate with low `max_hp`, long `meter_time`, or being static.
 
