@@ -24,6 +24,9 @@ const SEATED_REGEN := 3.0
 const MECH_REGEN_DELAY := 4.0
 ## Minimum fan width when a passive turns a single shot into a volley.
 const MIN_FAN_SPREAD_DEG := 24.0
+## Lifetime of the eye_burst's free lasers. 1.2 s of burst reads as ~1 s at full
+## width once the beam's grow-in (~0.25 s) and fade-out lead (0.35 s) are paid.
+const EYE_BURST_BEAM_TIME := 1.2
 ## Picking up a weapon you already carry tops its ammo up to this multiple of
 ## the weapon's base ammo.
 const AMMO_STOCK_MULTIPLIER := 2
@@ -47,6 +50,8 @@ var _invulnerable := false
 var _fire_cooldown := 0.0
 ## Live beams while channeling a BEAM weapon (one per fanned ray).
 var _active_beams: Array[LaserBeam] = []
+## True while the channeled-beam loop sound is held (edge-triggered).
+var _beam_loop_on := false
 
 @onready var interact_area: Area2D = $InteractArea
 @onready var body_sprite: AnimatedSprite2D = $BodySprite
@@ -233,6 +238,7 @@ func _fire() -> void:
 	var weapon_data: WeaponData = weapon.data
 	_fire_cooldown = 1.0 / maxf(weapon_data.fire_rate, 0.1)
 	time_since_fire = 0.0
+	Sfx.play_one_of(weapon_data.fire_sounds, weapon_data.fire_volume_db, weapon_data.fire_pitch)
 	var chair_passive: StringName = current_chair.data.passive_id if current_chair else &""
 	var levels := RunState.effective_passive_levels(chair_passive)
 	var count: int = weapon_data.projectile_count + 2 * int(levels.get(&"triple_shot", 0))
@@ -250,23 +256,44 @@ func _fire() -> void:
 		container.add_child(projectile)
 	_spend_ammo(weapon)
 
-## Fires one bullet per direction using the held weapon + current passives,
-## optionally enlarged. Used by the Eyed Chair's eye_burst. No-op if unarmed
-## or holding a beam weapon (which has no bullets to mimic).
+## Fires one free shot per direction using the held weapon + current passives,
+## optionally enlarged. Used by the Eyed Chair's eye_burst. Bullet weapons spawn
+## one bullet per direction; BEAM weapons fire short self-driving lasers
+## instead. No-op only when unarmed.
 func fire_burst(directions: Array, radius_mult := 1.0) -> bool:
 	var weapon := current_weapon()
-	if weapon.is_empty() or weapon.data.attack_type == WeaponData.AttackType.BEAM:
+	if weapon.is_empty():
 		return false
 	var weapon_data: WeaponData = weapon.data
 	var chair_passive: StringName = current_chair.data.passive_id if current_chair else &""
 	var levels := RunState.effective_passive_levels(chair_passive)
 	var container := get_tree().get_first_node_in_group("projectile_container")
+	if weapon_data.attack_type == WeaponData.AttackType.BEAM:
+		# Homing is stripped so the burst stays a starburst: with it, all the
+		# beams curl onto the same chain and collapse into one rope.
+		var burst_levels := levels.duplicate()
+		burst_levels.erase(&"homing")
+		for dir: Vector2 in directions:
+			var beam: LaserBeam = LASER_BEAM_SCENE.instantiate()
+			beam.configure(weapon_data)
+			beam.base_half_width *= radius_mult
+			beam.half_width = beam.base_half_width
+			beam.impact_vfx_cap = 2
+			beam.global_position = global_position
+			container.add_child(beam)
+			# Follow the player, not the chair: if the chair breaks mid-burst
+			# the lasers keep riding the survivor instead of freezing in place.
+			beam.start_burst(dir, EYE_BURST_BEAM_TIME, burst_levels, self)
+		Sfx.play(Sfx.LASER_BURST, -4.0, 1.0, 0.05)
+		return true
 	for dir: Vector2 in directions:
 		var projectile: Projectile = PROJECTILE_SCENE.instantiate()
 		projectile.configure(weapon_data, dir, levels)
 		projectile.radius *= radius_mult
 		projectile.position = global_position
 		container.add_child(projectile)
+	Sfx.play_one_of(weapon_data.fire_sounds, weapon_data.fire_volume_db,
+		weapon_data.fire_pitch * 1.05)
 	return true
 
 ## Continuous BEAM weapons: keep one beam per fanned ray alive while fire is
@@ -289,6 +316,10 @@ func _channel_beam(delta: float) -> void:
 	var levels := RunState.effective_passive_levels(chair_passive)
 	var count: int = weapon_data.projectile_count + 2 * int(levels.get(&"triple_shot", 0))
 	_sync_beam_count(count, weapon_data)
+	if not _beam_loop_on and weapon_data.beam_loop:
+		_beam_loop_on = true
+		Sfx.loop_acquire(&"player_beam", weapon_data.beam_loop,
+			weapon_data.fire_volume_db, weapon_data.fire_pitch)
 	var aim := global_position.direction_to(get_global_mouse_position())
 	var base_spread := deg_to_rad(weapon_data.spread_degrees)
 	for i in _active_beams.size():
@@ -315,17 +346,27 @@ func _sync_beam_count(count: int, weapon_data: WeaponData) -> void:
 		_active_beams.append(beam)
 
 func _clear_beams() -> void:
+	if _beam_loop_on:
+		_beam_loop_on = false
+		Sfx.loop_release(&"player_beam")
 	if _active_beams.is_empty():
 		return
 	for beam in _active_beams:
 		beam.begin_fade_out() # thins to a hairline, then frees itself
 	_active_beams.clear()
 
+func _exit_tree() -> void:
+	# Scene reloads skip _clear_beams; keep the loop refcount honest anyway.
+	if _beam_loop_on:
+		_beam_loop_on = false
+		Sfx.loop_release(&"player_beam")
+
 func _spend_ammo(weapon: Dictionary) -> void:
 	if weapon.data.max_ammo < 0:
 		return # infinite ammo: nothing to spend, nothing to discard
 	weapon.ammo -= 1
 	if weapon.ammo <= 0:
+		Sfx.play(Sfx.AMMO_PICKUP, -6.0, 0.6, 0.0) # pitched down: reads as "spent"
 		weapons.remove_at(current_weapon_index)
 		current_weapon_index = clampi(current_weapon_index, 0, maxi(weapons.size() - 1, 0))
 		_clear_beams()

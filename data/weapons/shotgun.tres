@@ -1,8 +1,9 @@
-[gd_resource type="Resource" script_class="WeaponData" load_steps=4 format=3]
+[gd_resource type="Resource" script_class="WeaponData" load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/weapon_data.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://fl188jssu87w" path="res://art/weapons/shotgun.png" id="2_sprite"]
 [ext_resource type="Texture2D" uid="uid://c52u3hbxukejm" path="res://art/fx/shell.png" id="3_shell"]
+[ext_resource type="AudioStream" path="res://audio/sfx/shotgun_shot.wav" id="4_fire"]
 
 [resource]
 script = ExtResource("1_script")
@@ -19,5 +20,7 @@ projectile_radius = 6.0
 projectile_color = Color(1, 0.9, 0.15, 1)
 projectile_lifetime = 0.5
 projectile_trail_pieces = 3
+fire_sounds = Array[AudioStream]([ExtResource("4_fire")])
+fire_volume_db = -4.0
 sprite = ExtResource("2_sprite")
 projectile_sprite = ExtResource("3_shell")

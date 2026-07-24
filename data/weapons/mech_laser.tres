@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://h1axl2dxeykx" path="res://scripts/weapon_data.gd" id="1_script"]
 [ext_resource type="Texture2D" uid="uid://batf8gyh5hb1f" path="res://art/fx/laser_beam.png" id="2_beam"]
+[ext_resource type="AudioStream" path="res://audio/sfx/laser_loop.ogg" id="3_loop"]
 
 [resource]
 script = ExtResource("1_script")
@@ -17,4 +18,7 @@ fire_rate = 10.0
 damage = 6.0
 projectile_radius = 7.0
 projectile_color = Color(0.5, 0.85, 1, 1)
+beam_loop = ExtResource("3_loop")
+fire_volume_db = -6.0
+fire_pitch = 0.85
 projectile_sprite = ExtResource("2_beam")

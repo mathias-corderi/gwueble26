@@ -48,6 +48,15 @@ enum AttackType { PROJECTILE, BEAM }
 ## pieces behind it darken. Used by the Shotgun pellet. PROJECTILE only.
 @export var projectile_trail_pieces: int = 0
 
+@export_group("Audio")
+## One-shot(s) played per shot/volley; several = a random one each time. PROJECTILE.
+@export var fire_sounds: Array[AudioStream] = []
+## Looping stream while the beam is channeled (loop-flagged import). BEAM.
+@export var beam_loop: AudioStream
+@export var fire_volume_db: float = 0.0
+## Base pitch for fire_sounds and beam_loop (random jitter is added per shot).
+@export var fire_pitch: float = 1.0
+
 @export_group("Presentation")
 ## Pickup + held placeholder sprite (optional).
 @export var sprite: Texture2D

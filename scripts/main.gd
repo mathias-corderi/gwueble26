@@ -4,6 +4,7 @@ extends Node2D
 func _ready() -> void:
 	_setup_glow_environment()
 	RunState.reset()
+	Sfx.stop_all_loops() # a restart mid-channel must not leave a loop playing
 	MusicManager.play_level_music()
 	# Built here (like the environment) so main.tscn and sandbox.tscn share it.
 	add_child(preload("res://scenes/ui/pause_menu.tscn").instantiate())

@@ -163,6 +163,7 @@ func _on_body_entered(body: Node) -> void:
 func _hit_enemy(enemy: Enemy) -> void:
 	enemy.take_damage(damage)
 	ImpactBurst.spawn(get_tree().current_scene, global_position, color)
+	Sfx.play_one_of(Sfx.IMPACTS, -6.0, 1.0, 0.1)
 	if poison_level > 0:
 		enemy.apply_poison(POISON_PCT_BASE + POISON_PCT_PER_LEVEL * (poison_level - 1), POISON_DURATION)
 	if burn_level > 0:
@@ -216,6 +217,7 @@ func _bounce_off_camera() -> void:
 
 func _explode(direct_target: Enemy) -> void:
 	var explosion_radius := EXPLOSION_BASE_RADIUS + EXPLOSION_RADIUS_PER_LEVEL * (explosive_level - 1)
+	Sfx.play(Sfx.EXPLOSION, -9.0, 1.0, 0.1)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if enemy == direct_target:
 			continue
@@ -227,6 +229,7 @@ func _explode(direct_target: Enemy) -> void:
 
 ## Sonic passive: a musical pop that damages and slows nearby enemies.
 func _sonic_burst() -> void:
+	Sfx.play(Sfx.SONIC_BOOM, -10.0, 1.4, 0.08)
 	var burst_radius := SONIC_BASE_RADIUS + SONIC_RADIUS_PER_LEVEL * (sonic_level - 1)
 	for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
 		if global_position.distance_to(enemy.global_position) <= burst_radius:
@@ -251,6 +254,7 @@ func _split() -> void:
 ## Electric Arc passive: the struck enemy zaps the chain around it. Each level
 ## adds one more jump.
 func _arc_from(enemy: Enemy) -> void:
+	Sfx.play(Sfx.SPARK, -2.0, 1.0, 0.12)
 	var chain := Combat.chain_lightning(get_tree(), enemy.global_position, arc_level,
 		damage * ARC_DAMAGE_FACTOR, [enemy])
 	LightningVfx.spawn(get_tree().current_scene, chain, ARC_COLOR)

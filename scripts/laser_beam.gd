@@ -30,6 +30,11 @@ extends Node2D
 
 ## Long enough to cross any reasonable window from corner to corner.
 const VISUAL_LENGTH := 2600.0
+## Shortest straight tail after a homing curve. The tail is VISUAL_LENGTH minus
+## the curved distance so the beam's TOTAL length stays constant — otherwise the
+## Line2D width_curve taper (normalized over total length) visibly stretches and
+## shrinks as targets are captured and lost.
+const MIN_TAIL := 350.0
 ## How fast the homing beam's exit direction settles onto a new aim (rad/second).
 ## Low on purpose: the exit heading eases in so the beam feels like it has mass.
 const AIM_TURN_RATE := 4.0
@@ -139,6 +144,9 @@ var _width_scale := 0.0
 var _width_target := 1.0
 var _fading_out := false
 ## Pooled continuous impact VFX, grown on demand and reused frame to frame.
+## The cap is lowered for multi-beam bursts (eye_burst) so 8 beams can't pile
+## up 64 PointLight2Ds.
+var impact_vfx_cap := MAX_IMPACT_VFX
 var _spark_emitters: Array[CPUParticles2D] = []
 var _lights: Array[PointLight2D] = []
 
@@ -269,6 +277,7 @@ func update_path(origin: Vector2, aim_dir: Vector2, passive_levels: Dictionary) 
 		var chained := {}
 		var target: Enemy = null
 		var max_turn := CURVE_STEP / CURVE_RADIUS
+		var traveled := 0.0
 		for step in MAX_CURVE_STEPS:
 			if target and (not is_instance_valid(target) or target.hp <= 0.0):
 				target = null
@@ -284,8 +293,9 @@ func update_path(origin: Vector2, aim_dir: Vector2, passive_levels: Dictionary) 
 			direction = Vector2.from_angle(
 				rotate_toward(direction.angle(), to_target.angle(), max_turn))
 			head += direction * CURVE_STEP
+			traveled += CURVE_STEP
 			_points.append(head)
-		_trace_camera(head, direction, VISUAL_LENGTH, bounce_level)
+		_trace_camera(head, direction, maxf(VISUAL_LENGTH - traveled, MIN_TAIL), bounce_level)
 	else:
 		_trace_inertia(origin, VISUAL_LENGTH, bounce_level)
 
@@ -316,6 +326,7 @@ func tick_damage() -> void:
 			enemy.apply_burn(Projectile.BURN_DPS_PER_LEVEL * burn_level, Projectile.BURN_DURATION)
 		if arc_level > 0 and float(_arc_cooldowns.get(enemy, 0.0)) <= 0.0:
 			_arc_cooldowns[enemy] = ARC_INTERVAL
+			Sfx.play(Sfx.SPARK, -2.0, 1.0, 0.12)
 			var chain := Combat.chain_lightning(get_tree(), enemy.global_position, arc_level,
 				damage * ARC_DAMAGE_FACTOR, [enemy])
 			LightningVfx.spawn(get_tree().current_scene, chain, Projectile.ARC_COLOR)
@@ -562,7 +573,7 @@ func _update_impact_vfx(visible_rect: Rect2) -> void:
 
 ## Grows the spark/light pool up to what this frame needs (capped, reused).
 func _ensure_vfx_pool(count: int) -> void:
-	var target := mini(count, MAX_IMPACT_VFX)
+	var target := mini(count, impact_vfx_cap)
 	while _spark_emitters.size() < target:
 		_spark_emitters.append(_make_spark_emitter())
 		_lights.append(_make_light())

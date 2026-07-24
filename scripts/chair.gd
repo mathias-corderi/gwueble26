@@ -51,15 +51,19 @@ const MUSICAL_WAVE_COLOR := Color(0.85, 0.5, 1.0)
 ## eye_burst (Eyed): 8 enlarged bullets mimicking the held weapon.
 const EYE_BURST_COUNT := 8
 const EYE_BURST_SIZE := 2.2
-## dash (Wheelchair): the chair charges forward, invulnerable, damaging contacts.
+## dash (Wheelchair): the chair charges forward, invulnerable, passing through
+## enemies (shoving each aside once) and scattering everyone when it ends.
 const DASH_SPEED_MULT := 2.0
-const DASH_DURATION := 0.35
+const DASH_DURATION := 1.05
 const DASH_DAMAGE := 24.0
 const DASH_KNOCKBACK := 520.0
 const DASH_STUN := 0.35
 const DASH_CONTACT_DIST := 34.0
-const DASH_END_RADIUS := 180.0
-const DASH_END_FORCE := 460.0
+const DASH_END_RADIUS := 420.0
+const DASH_END_FORCE := 1100.0
+## Knockback only moves an enemy while stunned (enemy.gd decays it at 1400/s),
+## so the end push needs its own longer stun to actually throw them far.
+const DASH_END_STUN := 0.55
 ## missiles (Smart): a swarm of self-guided missiles.
 const MISSILE_COUNT := 10
 const MISSILE_DAMAGE := 16.0
@@ -68,6 +72,9 @@ const CHARGE_LASER_TIME := 1.0
 const CHARGE_LASER_DURATION := 2
 const CHARGE_LASER_DAMAGE := 22.0
 const CHARGE_LASER_WIDTH := 22.0
+## Wind-up particles: ring they spawn on and how long each mote lives.
+const CHARGE_VFX_RADIUS := 100.0
+const CHARGE_VFX_LIFETIME := 0.5
 ## spear (Spiked): a wide short lunge.
 const SPEAR_DAMAGE := 34.0
 ## shatter (Plastic break): fragments of the seat fly out dealing damage.
@@ -98,6 +105,7 @@ var _dash_dir := Vector2.ZERO
 var _dash_hit := {}
 ## Atomic Throne charge_laser wind-up.
 var _charge_time := 0.0
+var _charge_particles: CPUParticles2D
 
 @onready var name_label: Label = $NameLabel
 @onready var chair_sprite: AnimatedSprite2D = $ChairSprite
@@ -195,9 +203,11 @@ func try_secondary() -> void:
 			Combat.knockback_enemies(get_tree(), global_position, SHOCKWAVE_RADIUS,
 				SHOCKWAVE_FORCE * power, SHOCKWAVE_STUN, SHOCKWAVE_DAMAGE * power)
 			PulseVfx.spawn(get_tree().current_scene, global_position, SHOCKWAVE_RADIUS, data.color, 0.3)
+			Sfx.play(Sfx.SONIC_BOOM, -10.0, 1.1)
 		&"musical_wave":
 			Combat.knockback_enemies(get_tree(), global_position, MUSICAL_WAVE_RADIUS,
 				MUSICAL_WAVE_FORCE * power, MUSICAL_WAVE_STUN, MUSICAL_WAVE_DAMAGE * power)
+			Sfx.play(Sfx.SONIC_BOOM, -14.0, 1.35)
 			for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
 				if global_position.distance_to(enemy.global_position) <= MUSICAL_WAVE_RADIUS:
 					enemy.apply_slow(MUSICAL_WAVE_SLOW, MUSICAL_WAVE_SLOW_TIME)
@@ -213,9 +223,13 @@ func try_secondary() -> void:
 			_dash_time = DASH_DURATION
 			_dash_dir = _aim_direction()
 			_dash_hit.clear()
+			# Stop colliding with enemies: the chair phases through the horde,
+			# shoving them aside, until _end_dash() restores the mask.
+			set_collision_mask_value(2, false)
 			if is_instance_valid(occupant):
 				occupant.set_invulnerable(true)
 			PulseVfx.spawn(get_tree().current_scene, global_position, 60.0, data.color, 0.2)
+			Sfx.play(Sfx.WHEEL_ACCEL, -3.0, 1.0, 0.05)
 		&"missiles":
 			var container := _projectile_container()
 			for i in MISSILE_COUNT:
@@ -225,7 +239,11 @@ func try_secondary() -> void:
 				container.add_child(missile)
 		&"charge_laser":
 			_charge_time = CHARGE_LASER_TIME
-			PulseVfx.spawn(get_tree().current_scene, global_position, 40.0, data.color, CHARGE_LASER_TIME)
+			# Parented to the chair so both the ring and the converging motes
+			# ride along while the mounted throne keeps driving.
+			PulseVfx.spawn(self, global_position, 90.0, data.color, CHARGE_LASER_TIME)
+			_start_charge_vfx()
+			Sfx.play(Sfx.LASER_CHARGE, 0.0, 1.0, 0.0) # synced to the 1 s wind-up
 		&"spear":
 			_spawn_spear(_aim_direction(), power)
 		_:
@@ -239,7 +257,9 @@ func _projectile_container() -> Node:
 	var container := get_tree().get_first_node_in_group("projectile_container")
 	return container if container else get_parent()
 
-## Damages and shoves enemies the chair barrels into during a dash (once each).
+## Damages and shoves aside enemies the chair phases through during a dash
+## (once each). The push is mostly lateral so the horde parts around the chair
+## instead of being herded along in front of it.
 func _dash_damage_contacts() -> void:
 	for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
 		if enemy in _dash_hit:
@@ -247,16 +267,66 @@ func _dash_damage_contacts() -> void:
 		if global_position.distance_to(enemy.global_position) <= DASH_CONTACT_DIST + enemy.data.radius:
 			_dash_hit[enemy] = true
 			enemy.take_damage(DASH_DAMAGE)
-			enemy.apply_knockback(_dash_dir * DASH_KNOCKBACK, DASH_STUN)
+			var side := signf(_dash_dir.cross(enemy.global_position - global_position))
+			if side == 0.0:
+				side = 1.0
+			var push := (Vector2(-_dash_dir.y, _dash_dir.x) * side * 0.8
+				+ _dash_dir * 0.5).normalized()
+			enemy.apply_knockback(push * DASH_KNOCKBACK, DASH_STUN)
+			Sfx.play(Sfx.WHEEL_CRASH, -8.0, 1.0, 0.12)
 
 func _end_dash() -> void:
-	Combat.knockback_enemies(get_tree(), global_position, DASH_END_RADIUS, DASH_END_FORCE, DASH_STUN)
+	set_collision_mask_value(2, true) # solid against enemies again
+	Combat.knockback_enemies(get_tree(), global_position, DASH_END_RADIUS, DASH_END_FORCE,
+		DASH_END_STUN)
 	PulseVfx.spawn(get_tree().current_scene, global_position, DASH_END_RADIUS, data.color, 0.25)
+	Sfx.play(Sfx.SONIC_BOOM, -8.0)
 	if is_instance_valid(occupant):
 		occupant.set_invulnerable(false)
 
+## Green motes streaming inward while the throne charges: emitted on a ring
+## around the chair and pulled toward the center (the beam's muzzle) hard
+## enough (-2R/t^2) that each mote dies exactly on arrival. local_coords makes
+## the whole stream ride the moving chair.
+func _start_charge_vfx() -> void:
+	_charge_particles = CPUParticles2D.new()
+	_charge_particles.amount = 40
+	_charge_particles.lifetime = CHARGE_VFX_LIFETIME
+	_charge_particles.local_coords = true
+	_charge_particles.emission_shape = CPUParticles2D.EMISSION_SHAPE_SPHERE_SURFACE
+	_charge_particles.emission_sphere_radius = CHARGE_VFX_RADIUS
+	_charge_particles.gravity = Vector2.ZERO
+	_charge_particles.initial_velocity_min = 0.0
+	_charge_particles.initial_velocity_max = 0.0
+	var pull := -2.0 * CHARGE_VFX_RADIUS / (CHARGE_VFX_LIFETIME * CHARGE_VFX_LIFETIME)
+	_charge_particles.radial_accel_min = pull
+	_charge_particles.radial_accel_max = pull
+	# A slight swirl so the stream spirals in instead of collapsing in spokes.
+	_charge_particles.tangential_accel_min = -60.0
+	_charge_particles.tangential_accel_max = 60.0
+	_charge_particles.scale_amount_min = 1.5
+	_charge_particles.scale_amount_max = 3.0
+	var hot := data.color.lerp(Color.WHITE, 0.4)
+	var ramp := Gradient.new()
+	ramp.set_color(0, Color(data.color.r, data.color.g, data.color.b, 0.15))
+	ramp.set_color(1, Color(hot.r * 1.5, hot.g * 1.5, hot.b * 1.5, 1.0)) # HDR: blooms
+	_charge_particles.color_ramp = ramp
+	var mat := CanvasItemMaterial.new()
+	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	_charge_particles.material = mat
+	_charge_particles.z_index = 6
+	add_child(_charge_particles)
+
 ## Fired after the Atomic Throne's wind-up: a giant beam toward the cursor.
 func _fire_charge_laser() -> void:
+	if is_instance_valid(_charge_particles):
+		# Stop emitting but let the in-flight motes finish feeding the beam.
+		_charge_particles.emitting = false
+		var tween := _charge_particles.create_tween()
+		tween.tween_interval(CHARGE_VFX_LIFETIME)
+		tween.tween_callback(_charge_particles.queue_free)
+		_charge_particles = null
+	Sfx.play(Sfx.MEGA_LASER, -4.0, 0.7, 0.03) # low pitch = a deeper, graver boom
 	var beam: LaserBeam = LASER_SCENE.instantiate()
 	beam.damage = CHARGE_LASER_DAMAGE
 	beam.base_half_width = CHARGE_LASER_WIDTH
@@ -268,6 +338,7 @@ func _fire_charge_laser() -> void:
 	beam.start_burst(_aim_direction(), CHARGE_LASER_DURATION, {}, self)
 
 func _spawn_spear(direction: Vector2, power := 1.0) -> void:
+	Sfx.play(Sfx.SPEAR, -4.0, 1.0, 0.08) # throttle dedups the spear_burst's four
 	var spear: SpearAttack = SPEAR_SCENE.instantiate()
 	spear.setup(direction, SPEAR_DAMAGE * power, data.color, data.sprite)
 	spear.global_position = global_position
@@ -276,6 +347,8 @@ func _spawn_spear(direction: Vector2, power := 1.0) -> void:
 func take_damage(amount: float) -> void:
 	if _breaking:
 		return
+	if _dash_time > 0.0:
+		return # the dash is an all-in charge: the chair is invulnerable too
 	hp -= amount
 	hp_changed.emit(maxf(hp, 0.0), data.max_hp)
 	queue_redraw()
@@ -292,6 +365,7 @@ func break_chair() -> void:
 	occupied = false
 	Combat.knockback_enemies(get_tree(), global_position, KNOCKBACK_RADIUS, KNOCKBACK_FORCE, KNOCKBACK_STUN)
 	PulseVfx.spawn(get_tree().current_scene, global_position, KNOCKBACK_RADIUS, data.color)
+	Sfx.play(Sfx.WHEEL_CRASH, -6.0, 0.8, 0.1) # generic break thud
 	_apply_break_effect()
 	if _meter_filled:
 		_drop_mech_part() # only a chair that paid out its passive leaves a part
@@ -313,6 +387,7 @@ func _apply_break_effect() -> void:
 		&"":
 			pass
 		&"electric_burst":
+			Sfx.play(Sfx.SPARK, -2.0, 1.0, 0.1)
 			var radius := ELECTRIC_BURST_RADIUS * data.break_effect_power
 			for enemy: Enemy in get_tree().get_nodes_in_group("enemies"):
 				if global_position.distance_to(enemy.global_position) <= radius:
@@ -335,6 +410,7 @@ func _apply_break_effect() -> void:
 				frag.global_position = global_position
 				container.add_child(frag)
 		&"blast":
+			Sfx.play(Sfx.EXPLOSION, -8.0, 0.8, 0.08)
 			Combat.knockback_enemies(get_tree(), global_position, BLAST_RADIUS * data.break_effect_power,
 				BLAST_FORCE, BLAST_STUN, BLAST_DAMAGE * data.break_effect_power)
 			PulseVfx.spawn(get_tree().current_scene, global_position,

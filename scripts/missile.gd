@@ -32,7 +32,17 @@ func _ready() -> void:
 	var shape := CircleShape2D.new()
 	shape.radius = RADIUS
 	$CollisionShape2D.shape = shape
+	# The whole swarm shares one quiet refcounted flight loop as a bed...
+	Sfx.loop_acquire(&"missiles", Sfx.MISSILE_LOOP, -14.0)
+	# ...while each missile fires its own launch whoosh with a random delay and
+	# pitch (throttle bypassed) so a volley sounds like many, not one.
+	get_tree().create_timer(randf() * 0.22).timeout.connect(
+		func() -> void: Sfx.play(Sfx.MISSILE_LAUNCH, -6.0, randf_range(0.85, 1.15), 0.0, 0))
 	queue_redraw()
+
+func _exit_tree() -> void:
+	# Covers detonation, lifetime expiry and scene reloads alike.
+	Sfx.loop_release(&"missiles")
 
 func _physics_process(delta: float) -> void:
 	_age += delta
@@ -55,6 +65,7 @@ func _on_body_entered(body: Node) -> void:
 		_detonate()
 
 func _detonate() -> void:
+	Sfx.play(Sfx.EXPLOSION, -5.0, 1.0, 0.1)
 	Combat.knockback_enemies(get_tree(), global_position, EXPLODE_RADIUS,
 		EXPLODE_KNOCKBACK, EXPLODE_STUN, damage)
 	PulseVfx.spawn(get_tree().current_scene, global_position, EXPLODE_RADIUS, color, 0.2)

@@ -21,6 +21,7 @@ func _ready() -> void:
 
 func _on_body_entered(body: Node) -> void:
 	if body is Player and body.try_pickup(data):
+		Sfx.play(Sfx.AMMO_PICKUP, -4.0, 1.0, 0.05)
 		queue_free()
 
 func _process(delta: float) -> void:

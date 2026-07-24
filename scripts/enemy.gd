@@ -85,6 +85,7 @@ func _desired_direction() -> Vector2:
 	return Vector2.ZERO
 
 func _shoot() -> void:
+	Sfx.play(Sfx.PISTOL, -14.0, 0.75, 0.08) # muffled pistol: reads as enemy fire
 	var shot: EnemyProjectile = preload("res://scenes/enemy_projectile.tscn").instantiate()
 	shot.configure(data, global_position.direction_to(_player.global_position))
 	shot.global_position = global_position
